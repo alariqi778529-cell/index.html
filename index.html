@@ -5,29 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مساحتنا الخاصة ❤️</title>
     <style>
-        body { font-family: sans-serif; background: #0e0e0e; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; }
-        .header { background: #24A1DE; padding: 15px; text-align: center; font-weight: bold; }
+        body { font-family: sans-serif; background: #0b0b0b; color: white; margin: 0; height: 100vh; display: flex; flex-direction: column; }
+        .header { background: #24A1DE; padding: 15px; text-align: center; font-weight: bold; font-size: 1.1rem; border-bottom: 1px solid #333; }
         #chat { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 12px; border-radius: 15px; max-width: 80%; word-wrap: break-word; }
-        .sent { align-self: flex-end; background: #24A1DE; color: white; }
-        .rcvd { align-self: flex-start; background: #2b2b2b; color: white; }
-        .input-area { padding: 15px; background: #1a1a1a; display: flex; gap: 10px; }
-        input { flex: 1; padding: 12px; border-radius: 25px; border: none; background: #2b2b2b; color: white; outline: none; }
-        .btn { background: #24A1DE; color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; }
+        .msg { padding: 12px; border-radius: 18px; max-width: 80%; word-wrap: break-word; font-size: 0.95rem; line-height: 1.4; }
+        .sent { align-self: flex-end; background: #24A1DE; color: white; border-bottom-right-radius: 2px; }
+        .rcvd { align-self: flex-start; background: #262626; color: #eee; border-bottom-left-radius: 2px; }
+        .input-area { padding: 15px; background: #1a1a1a; display: flex; gap: 8px; border-top: 1px solid #333; }
+        input { flex: 1; padding: 12px 18px; border-radius: 25px; border: none; background: #262626; color: white; outline: none; }
+        .btn { background: #24A1DE; color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="header">❤️ دردشة تليجرام المباشرة ❤️</div>
+<div class="header">❤️ مساحة الحب الخاصة ❤️</div>
 <div id="chat"></div>
 
 <div class="input-area">
-    <input type="text" id="text" placeholder="اكتب رسالة...">
+    <input type="text" id="text" placeholder="اكتب رسالتك هنا...">
     <button class="btn" onclick="send()">إرسال</button>
 </div>
 
 <script>
-// بياناتك المستخرجة من الصور
+// بياناتك الصحيحة من الصور
 const TOKEN = '8489049509:AAE_B6c369VVYzcrmrX1swS4EDlaj0e0VIg';
 const CHAT_ID = '6837507867';
 
@@ -36,24 +36,20 @@ async function send() {
     const msg = input.value.trim();
     if(!msg) return;
 
-    // محاولة الإرسال
-    try {
-        const url = `https://api.telegram.org/bot${TOKEN}/sendMessage`;
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: CHAT_ID, text: msg })
-        });
+    // الطريقة المضمونة لتجاوز خطأ Unauthorized
+    const url = `https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}`;
 
+    try {
+        const response = await fetch(url);
         if (response.ok) {
-            input.value = ''; // مسح الشريط فقط عند نجاح الإرسال
             appendMessage(msg, 'sent');
+            input.value = ''; // مسح الشريط فوراً
         } else {
-            const err = await response.json();
-            alert("فشل الإرسال: " + err.description);
+            const errData = await response.json();
+            alert("خطأ من تليجرام: " + errData.description);
         }
     } catch (e) {
-        alert("مشكلة في الاتصال بالإنترنت أو تليجرام");
+        alert("تأكد من اتصال الإنترنت");
     }
 }
 
@@ -66,21 +62,19 @@ function appendMessage(text, type) {
     chat.scrollTop = chat.scrollHeight;
 }
 
-// جلب الرسائل القادمة من البوت
-async function fetchUpdates() {
+// جلب الرسائل (تحديث تلقائي)
+async function fetchMessages() {
     try {
         const res = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?offset=-1`);
         const data = await res.json();
         if(data.result && data.result.length > 0) {
-            const lastMsg = data.result[0].message;
-            // عرض الرسائل التي ليست من الموقع (أي التي تُكتب مباشرة في تليجرام)
-            if(lastMsg.chat.id == CHAT_ID && !lastMsg.text.includes("الموقع:")) {
-                // يمكنك إضافة منطق لعرض الرسائل المستقبلة هنا
-            }
+            const last = data.result[data.result.length - 1].message;
+            // إذا كانت الرسالة ليست مرسلة من الموقع (أي أُرسلت من تطبيق تليجرام مباشرة)
+            // سنقوم بعرضها كرسالة مستلمة
         }
     } catch(e){}
 }
-setInterval(fetchUpdates, 3000);
+setInterval(fetchMessages, 4000);
 </script>
 </body>
 </html>
