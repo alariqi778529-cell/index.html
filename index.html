@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مساحتنا ❤️</title>
     <style>
-        body { font-family: sans-serif; background: #000; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        body { font-family: sans-serif; background: #000; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; }
         .header { background: #24A1DE; padding: 15px; text-align: center; font-weight: bold; }
-        #chat { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #0e0e0e; }
-        .msg { padding: 10px 15px; border-radius: 15px; max-width: 80%; font-size: 1rem; line-height: 1.4; word-wrap: break-word; }
-        .sent { align-self: flex-end; background: #24A1DE; color: white; }
+        #chat { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 15px; border-radius: 15px; max-width: 80%; word-wrap: break-word; }
+        .sent { align-self: flex-end; background: #24A1DE; }
         .input-area { padding: 12px; background: #1a1a1a; display: flex; gap: 10px; border-top: 1px solid #333; }
         input { flex: 1; padding: 12px; border-radius: 20px; border: none; background: #2b2b2b; color: white; outline: none; }
         .btn { background: #24A1DE; color: white; border: none; padding: 0 20px; border-radius: 20px; cursor: pointer; font-weight: bold; }
@@ -21,24 +21,23 @@
 <div id="chat"></div>
 
 <div class="input-area">
-    <input type="text" id="text" placeholder="اكتب رسالتك هنا..." autocomplete="off">
+    <input type="text" id="text" placeholder="اكتب هنا..." autocomplete="off">
     <button class="btn" onclick="send()">إرسال</button>
 </div>
 
 <script>
-// البيانات مأخوذة من صورك بدقة (تأكد من عدم وجود مسافات هنا)
-const TOKEN = '8489049509:AAE_B6c369VVYzcrmrX1swS4EDlaj0e0VIg'.trim();
-const CHAT_ID = '6837507867'.trim();
+// التوكن الجديد الذي أرسلته أنت
+const TOKEN = '8489049509:AAE_B6c369VVYzcrmrX1swS4EDlaj0eOVIg';
+const CHAT_ID = '6837507867'; // الـ ID الخاص بك
 
 async function send() {
     const input = document.getElementById('text');
     const msg = input.value.trim();
     if(!msg) return;
 
-    // مسح النص فوراً
-    input.value = '';
+    input.value = ''; // مسح النص فوراً من الشريط
 
-    // إرسال عبر رابط مباشر (أكثر الطرق استقراراً)
+    // رابط الإرسال المباشر لتجاوز أي تعليق
     const url = `https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}`;
 
     try {
@@ -53,17 +52,14 @@ async function send() {
             chat.appendChild(div);
             chat.scrollTop = chat.scrollHeight;
         } else {
-            // إذا ظهر Unauthorized هنا، فهذا يعني أن التوكن فيه خطأ حرفي
-            alert("خطأ تليجرام: " + result.description);
+            alert("خطأ: " + result.description);
             input.value = msg; 
         }
     } catch (e) {
-        alert("تأكد من اتصالك بالإنترنت");
+        alert("تأكد من الإنترنت");
         input.value = msg;
     }
 }
-
-// السماح بالإرسال عند ضغط زر Enter
 document.getElementById('text').onkeypress = (e) => { if(e.key === 'Enter') send(); };
 </script>
 </body>
