@@ -4,108 +4,105 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مساحتنا الخاصة ❤️</title>
+    <script src='https://cdn.scaledrone.com/scaledrone.min.js'></script>
     <style>
         body { font-family: sans-serif; background: #121212; color: white; margin: 0; height: 100vh; display: flex; flex-direction: column; }
         #lock { position: fixed; inset: 0; background: #1a1a1a; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .header { background: #ff4b2b; padding: 15px; text-align: center; font-weight: bold; font-size: 1.2rem; }
+        .header { background: #ff4b2b; padding: 15px; text-align: center; font-weight: bold; }
         #chat { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 12px 16px; border-radius: 20px; max-width: 75%; word-wrap: break-word; line-height: 1.4; }
-        .sent { align-self: flex-end; background: #ff4b2b; border-bottom-right-radius: 2px; }
-        .rcvd { align-self: flex-start; background: #333; border-bottom-left-radius: 2px; }
-        .time { font-size: 0.65rem; opacity: 0.7; display: block; margin-top: 5px; }
+        .msg { padding: 12px; border-radius: 15px; max-width: 80%; word-wrap: break-word; }
+        .sent { align-self: flex-end; background: #ff4b2b; }
+        .rcvd { align-self: flex-start; background: #333; }
         .input-area { padding: 15px; background: #1e1e1e; display: flex; gap: 8px; border-top: 1px solid #333; }
         input { flex: 1; padding: 12px; border-radius: 25px; border: none; background: #333; color: white; outline: none; text-align: center; }
-        .btn { background: #ff4b2b; color: white; border: none; padding: 10px 22px; border-radius: 25px; cursor: pointer; font-weight: bold; }
+        .btn { background: #ff4b2b; color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="lock">
-    <h2>🔒 مساحة خاصة</h2>
-    <input type="password" id="pass" placeholder="الرمز السري (7777)">
+    <h2>🔒 الرمز السري</h2>
+    <input type="password" id="pass" placeholder="7777">
     <br>
     <button class="btn" onclick="unlock()">دخول</button>
 </div>
 
 <div class="header">❤️ مساحتنا الخاصة ❤️</div>
-
 <div id="chat"></div>
 
 <div id="mainChat" class="input-area" style="display: none;">
-    <input type="text" id="text" placeholder="اكتب رسالتك هنا...">
+    <input type="text" id="text" placeholder="اكتب هنا...">
     <button class="btn" onclick="send()">إرسال</button>
 </div>
 
 <script>
 const PASS = "7777";
-const LIMIT = 24 * 60 * 60 * 1000; // 24 ساعة
-const STORAGE_KEY = "PRIVATE_CHAT_DATA";
-
-// تحديد هوية المتصفح (نافذة A أو نافذة B)
-if(!sessionStorage.getItem('user_id')) {
-    sessionStorage.setItem('user_id', 'user_' + Math.random().toString(36).substr(2, 4));
-}
-const myId = sessionStorage.getItem('user_id');
+const LIMIT = 24 * 60 * 60 * 1000;
+// قناة ربط مجانية جاهزة
+const drone = new Scaledrone('cia8X89Fk6Yv0G6C'); 
+const roomName = 'observable-our-room';
+let room;
 
 function unlock() {
     if(document.getElementById('pass').value === PASS) {
-        document.getElementById('lock').style.display = 'none';
-        document.getElementById('mainChat').style.display = 'flex';
-        render(); // تحميل الرسائل عند الدخول
-    } else { alert("الرمز خطأ!"); }
+        document.getElementById('lock').style.display='none';
+        document.getElementById('mainChat').style.display='flex';
+        loadLocalHistory(); // تحميل الرسائل السابقة من ذاكرة الهاتف
+    } else { alert("خطأ!"); }
 }
+
+drone.on('open', error => {
+    if (error) return console.error(error);
+    room = drone.subscribe(roomName);
+    room.on('data', (data) => {
+        // استقبال الرسالة من أي متصفح
+        renderMsg(data.text, data.sender === drone.clientId ? 'sent' : 'rcvd', data.time);
+    });
+});
 
 function send() {
     const input = document.getElementById('text');
-    const content = input.value.trim();
-    if(!content) return;
-
-    const newMessage = {
-        id: Date.now() + Math.random(),
-        sender: myId,
-        text: content,
-        time: Date.now()
-    };
-
-    let history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    history.push(newMessage);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-
-    input.value = '';
-    render(); // تحديث الواجهة فوراً للمرسل
-}
-
-function render() {
-    const chatBox = document.getElementById('chat');
-    const now = Date.now();
-    let history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-
-    // تنظيف الرسائل القديمة (أكبر من 24 ساعة)
-    const activeMessages = history.filter(m => (now - m.time) < LIMIT);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(activeMessages));
-
-    chatBox.innerHTML = '';
-    activeMessages.forEach(m => {
-        const d = document.createElement('div');
-        d.className = 'msg ' + (m.sender === myId ? 'sent' : 'rcvd');
-        const timeStr = new Date(m.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        d.innerHTML = `${m.text} <span class="time">${timeStr}</span>`;
-        chatBox.appendChild(d);
-    });
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-// السحر هنا: هذا المستمع يراقب التغييرات من المتصفحات الأخرى على نفس الجهاز
-window.addEventListener('storage', (e) => {
-    if (e.key === STORAGE_KEY) {
-        render();
+    const txt = input.value.trim();
+    if(txt && room) {
+        drone.publish({
+            room: roomName,
+            message: { text: txt, sender: drone.clientId, time: Date.now() }
+        });
+        input.value = '';
     }
-});
+}
 
-document.getElementById('text').addEventListener('keypress', (e) => {
-    if(e.key === 'Enter') send();
-});
+function renderMsg(text, type, time) {
+    const chat = document.getElementById('chat');
+    const d = document.createElement('div');
+    d.className = 'msg ' + type;
+    d.innerText = text;
+    chat.appendChild(d);
+    chat.scrollTop = chat.scrollHeight;
+
+    // حفظ في الذاكرة المحلية للـ 24 ساعة
+    if(type === 'sent' || type === 'rcvd') {
+        saveLocal(text, type, time);
+    }
+}
+
+function saveLocal(t, s, tm) {
+    let logs = JSON.parse(localStorage.getItem('chat_final') || '[]');
+    if(!logs.find(m => m.tm === tm)) {
+        logs.push({t, s, tm});
+        localStorage.setItem('chat_final', JSON.stringify(logs));
+    }
+}
+
+function loadLocalHistory() {
+    const now = Date.now();
+    let logs = JSON.parse(localStorage.getItem('chat_final') || '[]');
+    const filtered = logs.filter(m => (now - m.tm) < LIMIT);
+    localStorage.setItem('chat_final', JSON.stringify(filtered));
+    filtered.forEach(m => renderMsg(m.t, m.s, m.tm));
+}
+
+document.getElementById('text').addEventListener('keypress', (e) => { if(e.key === 'Enter') send(); });
 </script>
-
 </body>
 </html>
