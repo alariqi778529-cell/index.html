@@ -4,26 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مساحتنا الخاصة ❤️</title>
-    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body { font-family: sans-serif; background: #121212; color: white; margin: 0; height: 100vh; display: flex; flex-direction: column; }
         #lock { position: fixed; inset: 0; background: #1a1a1a; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .header { background: #ff4b2b; padding: 15px; text-align: center; font-weight: bold; }
-        #chat { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 12px; border-radius: 15px; max-width: 80%; word-wrap: break-word; }
-        .sent { align-self: flex-end; background: #ff4b2b; }
-        .rcvd { align-self: flex-start; background: #333; }
+        .header { background: #ff4b2b; padding: 15px; text-align: center; font-weight: bold; border-bottom: 2px solid #222; }
+        #chat { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #121212; }
+        .msg { padding: 12px 16px; border-radius: 18px; max-width: 75%; word-wrap: break-word; line-height: 1.4; position: relative; }
+        .sent { align-self: flex-end; background: #ff4b2b; color: white; border-bottom-right-radius: 2px; }
+        .rcvd { align-self: flex-start; background: #333; color: white; border-bottom-left-radius: 2px; }
+        .time { font-size: 0.65rem; opacity: 0.7; display: block; margin-top: 4px; text-align: left; }
         .input-area { padding: 15px; background: #1e1e1e; display: flex; gap: 8px; border-top: 1px solid #333; }
-        input { flex: 1; padding: 12px; border-radius: 25px; border: none; background: #333; color: white; outline: none; text-align: center; }
-        .btn { background: #ff4b2b; color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; }
-        .time { font-size: 0.7rem; opacity: 0.6; display: block; margin-top: 5px; }
+        input { flex: 1; padding: 12px; border-radius: 25px; border: none; background: #333; color: white; outline: none; }
+        .btn { background: #ff4b2b; color: white; border: none; padding: 10px 22px; border-radius: 25px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="lock">
-    <h2 style="color: white;">🔒 الرمز السري</h2>
-    <input type="password" id="pass" placeholder="7777">
+    <h2 style="margin-bottom: 20px;">🔒 الرمز السري</h2>
+    <input type="password" id="pass" placeholder="7777" style="max-width: 150px; text-align: center;">
     <br>
     <button class="btn" onclick="unlock()">دخول</button>
 </div>
@@ -33,51 +34,64 @@
 <div id="chat"></div>
 
 <div id="mainChat" class="input-area" style="display: none;">
-    <input type="text" id="text" placeholder="اكتب هنا...">
+    <input type="text" id="text" placeholder="اكتب رسالة...">
     <button class="btn" onclick="send()">إرسال</button>
 </div>
 
 <script>
-const gun = Gun(['https://gun-manhattan.herokuapp.com/gun']); // خادم المزامنة المجاني
+// إعداد Firebase (مفتاح تجريبي عام للمزامنة)
+const firebaseConfig = {
+    databaseURL: "https://chat-demo-7777-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database().ref('private_chat_7777');
+
 const PASS = "7777";
-const LIMIT = 24 * 60 * 60 * 1000; 
-const myId = Math.random().toString(36).substr(2, 9); // معرف فريد لكل نافذة متصفح
+const LIMIT = 24 * 60 * 60 * 1000; // 24 ساعة
+const myId = Math.random().toString(36).substr(2, 9);
 
 function unlock() {
     if(document.getElementById('pass').value === PASS) {
         document.getElementById('lock').style.display='none';
         document.getElementById('mainChat').style.display='flex';
-        startChat();
-    } else { alert("خطأ!"); }
+        initChat();
+    } else { alert("الرمز خطأ!"); }
 }
 
-function startChat() {
-    // نستخدم اسم غرفة ثابت "our_private_room_7777"
-    const room = gun.get('our_private_room_7777');
-
-    // استقبال الرسائل فوراً
-    room.map().on((data, id) => {
-        if (!data || !data.text) return;
-        
-        // التحقق من الوقت (حذف بعد 24 ساعة)
+function initChat() {
+    // استماع للرسائل الجديدة لحظياً
+    db.limitToLast(50).on('value', (snapshot) => {
+        const chatBox = document.getElementById('chat');
+        chatBox.innerHTML = ''; // مسح الشاشة لإعادة الرسم
         const now = Date.now();
-        if (now - data.time > LIMIT) return;
+        
+        snapshot.forEach((child) => {
+            const data = child.val();
+            
+            // شرط الـ 24 ساعة: إذا كانت الرسالة قديمة، نحذفها من القاعدة
+            if (now - data.time > LIMIT) {
+                child.ref.remove();
+                return;
+            }
 
-        // منع تكرار الرسالة في الواجهة
-        if (document.getElementById(id)) return;
-
-        renderMsg(data, id);
+            const d = document.createElement('div');
+            d.className = 'msg ' + (data.sender === myId ? 'sent' : 'rcvd');
+            const timeStr = new Date(data.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            d.innerHTML = `${data.text} <span class="time">${timeStr}</span>`;
+            chatBox.appendChild(d);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
     });
 }
 
 function send() {
     const input = document.getElementById('text');
-    const txt = input.value.trim();
-    if(!txt) return;
+    const val = input.value.trim();
+    if(!val) return;
 
-    const msgId = Math.random().toString(36).substr(2, 9);
-    gun.get('our_private_room_7777').get(msgId).put({
-        text: txt,
+    // دفع الرسالة للسحابة
+    db.push({
+        text: val,
         sender: myId,
         time: Date.now()
     });
@@ -85,17 +99,11 @@ function send() {
     input.value = '';
 }
 
-function renderMsg(data, id) {
-    const chat = document.getElementById('chat');
-    const d = document.createElement('div');
-    d.id = id;
-    d.className = 'msg ' + (data.sender === myId ? 'sent' : 'rcvd');
-    d.innerHTML = `${data.text} <span class="time">${new Date(data.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>`;
-    chat.appendChild(d);
-    chat.scrollTop = chat.scrollHeight;
-}
-
-document.getElementById('text').addEventListener('keypress', (e) => { if(e.key === 'Enter') send(); });
+// دعم زر Enter
+document.getElementById('text').addEventListener('keypress', (e) => {
+    if(e.key === 'Enter') send();
+});
 </script>
+
 </body>
 </html>
