@@ -7,25 +7,24 @@
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #121212; color: white; margin: 0; height: 100vh; display: flex; flex-direction: column; }
-        #lock { position: fixed; inset: 0; background: #1a1a1a; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .header { background: #ff4b2b; padding: 15px; text-align: center; font-weight: bold; font-size: 1.2rem; }
+        #lock { position: fixed; inset: 0; background: #1a1a1a; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .header { background: #ff4b2b; padding: 15px; text-align: center; font-weight: bold; }
         #chat { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 12px 18px; border-radius: 20px; max-width: 80%; word-wrap: break-word; font-size: 0.95rem; line-height: 1.4; }
-        .sent { align-self: flex-end; background: #ff4b2b; color: white; border-bottom-right-radius: 2px; }
-        .rcvd { align-self: flex-start; background: #333; color: white; border-bottom-left-radius: 2px; }
+        .msg { padding: 12px; border-radius: 15px; max-width: 80%; word-wrap: break-word; }
+        .sent { align-self: flex-end; background: #ff4b2b; }
+        .rcvd { align-self: flex-start; background: #333; }
         .input-area { padding: 15px; background: #1e1e1e; display: flex; gap: 8px; border-top: 1px solid #333; }
-        #setup { padding: 20px; text-align: center; background: #1a1a1a; }
-        input { flex: 1; padding: 12px; border-radius: 25px; border: 1px solid #444; background: #333; color: white; outline: none; text-align: center; }
-        .btn { background: #ff4b2b; color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-weight: bold; }
-        .system-msg { align-self: center; font-size: 0.8rem; color: #888; margin: 5px 0; }
+        input { flex: 1; padding: 12px; border-radius: 25px; border: none; background: #333; color: white; outline: none; text-align: center; }
+        .btn { background: #ff4b2b; color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; }
+        #setup { padding: 20px; text-align: center; }
+        .status { font-size: 0.8rem; color: #888; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div id="lock">
-    <h2>🔒 مساحة خاصة</h2>
-    <p>أدخل الرمز السري للدخول</p>
-    <input type="password" id="pass" placeholder="الرمز السري">
+    <h2 style="color: white;">🔒 ادخل الرمز السري</h2>
+    <input type="password" id="pass" placeholder="7777">
     <br>
     <button class="btn" onclick="unlock()">دخول</button>
 </div>
@@ -33,126 +32,113 @@
 <div class="header">❤️ مساحتنا الخاصة ❤️</div>
 
 <div id="setup">
-    <p>ادخلا نفس "اسم الغرفة" للارتباط</p>
-    <input type="text" id="room" placeholder="اسم الغرفة (مثلاً: secret123)">
-    <button class="btn" onclick="start()">ربط</button>
+    <p>ادخلا نفس اسم الغرفة بدقة</p>
+    <input type="text" id="room" placeholder="مثلاً: love2026">
+    <button class="btn" id="connectBtn" onclick="start()">ربط الاتصال</button>
+    <div id="statusLabel" class="status">بانتظار البدء...</div>
 </div>
 
 <div id="chat"></div>
 
 <div id="mainChat" class="input-area" style="display: none;">
-    <input type="text" id="text" placeholder="اكتب رسالتك هنا...">
+    <input type="text" id="text" placeholder="اكتب هنا...">
     <button class="btn" onclick="send()">إرسال</button>
 </div>
 
 <script>
 let p, c;
-const SECRET_PASS = "7777";
-const ONE_DAY = 24 * 60 * 60 * 1000; // 24 ساعة
+const PASS = "7777";
+const LIMIT = 24 * 60 * 60 * 1000;
 
-// 1. فتح القفل وتحميل الأرشيف
 function unlock() {
-    if(document.getElementById('pass').value === SECRET_PASS) {
-        document.getElementById('lock').style.display = 'none';
-        loadHistory();
-    } else {
-        alert("الرمز غير صحيح!");
-    }
+    if(document.getElementById('pass').value === PASS) {
+        document.getElementById('lock').style.display='none';
+        loadLogs();
+    } else { alert("خطأ!"); }
 }
 
-// 2. بدء الاتصال
 function start() {
-    const roomId = "room-" + document.getElementById('room').value;
-    if(!document.getElementById('room').value) return alert("يرجى إدخال اسم الغرفة");
-
-    p = new Peer(roomId);
+    const rId = document.getElementById('room').value.trim().toLowerCase();
+    if(!rId) return alert("اكتب اسم الغرفة");
     
-    p.on('open', () => {
-        addSystemMsg("تم فتح الغرفة. اطلب منها الدخول بنفس الاسم.");
-    });
+    document.getElementById('statusLabel').innerText = "جاري محاولة الربط...";
+    document.getElementById('connectBtn').disabled = true;
 
+    // نحاول الاتصال كطرف منضم أولاً
+    p = new Peer();
+    
+    p.on('open', (id) => {
+        const conn = p.connect("room-" + rId);
+        
+        // مهلة 4 ثوانٍ: إذا لم يستجب الطرف الأول، نفتح نحن الغرفة
+        const timeout = setTimeout(() => {
+            p.destroy();
+            createRoom(rId);
+        }, 4000);
+
+        conn.on('open', () => {
+            clearTimeout(timeout);
+            c = conn;
+            setupChat();
+        });
+    });
+}
+
+function createRoom(rId) {
+    p = new Peer("room-" + rId);
+    p.on('open', () => {
+        document.getElementById('statusLabel').innerText = "تم فتح الغرفة.. اطلب منها الربط الآن";
+    });
     p.on('connection', conn => {
         c = conn;
-        setupConnection();
+        setupChat();
     });
-
     p.on('error', (err) => {
-        if(err.type === 'id-taken') {
-            p = new Peer(); 
-            p.on('open', () => {
-                c = p.connect(roomId);
-                setupConnection();
-            });
-        }
+        document.getElementById('statusLabel').innerText = "حدث خطأ، حاول مجدداً";
+        document.getElementById('connectBtn').disabled = false;
     });
 }
 
-function setupConnection() {
-    c.on('open', () => {
-        addSystemMsg("✅ متصلان الآن!");
-        document.getElementById('setup').style.display = 'none';
-        document.getElementById('mainChat').style.display = 'flex';
-    });
-    c.on('data', data => addMsg(data, 'rcvd'));
+function setupChat() {
+    document.getElementById('statusLabel').innerText = "✅ متصلان!";
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('mainChat').style.display = 'flex';
+    c.on('data', d => renderMsg(d, 'rcvd'));
 }
 
-// 3. إرسال الرسائل
 function send() {
     const m = document.getElementById('text').value;
     if(c && m) {
         c.send(m);
-        addMsg(m, 'sent');
+        renderMsg(m, 'sent');
         document.getElementById('text').value = '';
     }
 }
 
-// 4. إدارة الرسائل والتخزين
-function addMsg(text, type, time = Date.now()) {
+function renderMsg(t, type, time = Date.now()) {
     const d = document.createElement('div');
     d.className = 'msg ' + type;
-    d.innerText = text;
-    document.getElementById('chat').appendChild(d);
-    document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
-
-    // حفظ في التخزين المحلي
-    saveToLocal(text, type, time);
-}
-
-function addSystemMsg(t) {
-    const d = document.createElement('div');
-    d.className = 'system-msg';
     d.innerText = t;
     document.getElementById('chat').appendChild(d);
-}
-
-function saveToLocal(text, sender, timestamp) {
-    let history = JSON.parse(localStorage.getItem('private_chat_v1') || '[]');
-    history.push({ text, sender, timestamp });
-    localStorage.setItem('private_chat_v1', JSON.stringify(history));
-}
-
-function loadHistory() {
-    const now = Date.now();
-    let history = JSON.parse(localStorage.getItem('private_chat_v1') || '[]');
+    document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
     
-    // تصفية الرسائل (أقل من 24 ساعة)
-    const validHistory = history.filter(m => (now - m.timestamp) < ONE_DAY);
-    localStorage.setItem('private_chat_v1', JSON.stringify(validHistory));
+    let logs = JSON.parse(localStorage.getItem('chat_logs') || '[]');
+    logs.push({t, type, time});
+    localStorage.setItem('chat_logs', JSON.stringify(logs));
+}
 
-    validHistory.forEach(m => {
+function loadLogs() {
+    const now = Date.now();
+    let logs = JSON.parse(localStorage.getItem('chat_logs') || '[]');
+    const filtered = logs.filter(m => (now - m.time) < LIMIT);
+    localStorage.setItem('chat_logs', JSON.stringify(filtered));
+    filtered.forEach(m => {
         const d = document.createElement('div');
-        d.className = 'msg ' + m.sender;
-        d.innerText = m.text;
+        d.className = 'msg ' + m.type;
+        d.innerText = m.t;
         document.getElementById('chat').appendChild(d);
     });
-    document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
 }
-
-// دعم الإرسال عبر زر Enter
-document.getElementById('text').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') send();
-});
 </script>
-
 </body>
 </html>
