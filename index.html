@@ -3,88 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مساحتنا</title>
+    <title>مساحتنا الخاصة ❤️</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #121212; color: white; margin: 0; height: 100vh; display: flex; flex-direction: column; }
-        #lock { position: fixed; inset: 0; background: white; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: black; }
-        .header { background: #ff4b2b; padding: 15px; text-align: center; font-weight: bold; }
+        #lock { position: fixed; inset: 0; background: #1a1a1a; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        .header { background: #ff4b2b; padding: 15px; text-align: center; font-weight: bold; font-size: 1.2rem; }
         #chat { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 10px; border-radius: 15px; max-width: 80%; word-wrap: break-word; }
-        .sent { align-self: flex-end; background: #ff4b2b; }
-        .rcvd { align-self: flex-start; background: #333; }
+        .msg { padding: 12px 18px; border-radius: 20px; max-width: 80%; word-wrap: break-word; font-size: 0.95rem; line-height: 1.4; }
+        .sent { align-self: flex-end; background: #ff4b2b; color: white; border-bottom-right-radius: 2px; }
+        .rcvd { align-self: flex-start; background: #333; color: white; border-bottom-left-radius: 2px; }
         .input-area { padding: 15px; background: #1e1e1e; display: flex; gap: 8px; border-top: 1px solid #333; }
-        input { flex: 1; padding: 12px; border-radius: 25px; border: none; background: #333; color: white; outline: none; }
-        .btn { background: #ff4b2b; color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; }
+        #setup { padding: 20px; text-align: center; background: #1a1a1a; }
+        input { flex: 1; padding: 12px; border-radius: 25px; border: 1px solid #444; background: #333; color: white; outline: none; text-align: center; }
+        .btn { background: #ff4b2b; color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-weight: bold; }
+        .system-msg { align-self: center; font-size: 0.8rem; color: #888; margin: 5px 0; }
     </style>
 </head>
 <body>
 
 <div id="lock">
-    <h2>🔒 الرمز السري</h2>
-    <input type="password" id="pass" placeholder="7777" style="border: 2px solid #ff4b2b; margin-bottom: 15px;">
+    <h2>🔒 مساحة خاصة</h2>
+    <p>أدخل الرمز السري للدخول</p>
+    <input type="password" id="pass" placeholder="الرمز السري">
+    <br>
     <button class="btn" onclick="unlock()">دخول</button>
 </div>
 
 <div class="header">❤️ مساحتنا الخاصة ❤️</div>
-<div id="chat">
-    <div class="msg rcvd">بانتظار دخول الطرف الآخر...</div>
-</div>
 
-<div class="input-area" id="setup">
-    <input type="text" id="room" placeholder="اسم الغرفة (مثلاً: love)">
+<div id="setup">
+    <p>ادخلا نفس "اسم الغرفة" للارتباط</p>
+    <input type="text" id="room" placeholder="اسم الغرفة (مثلاً: secret123)">
     <button class="btn" onclick="start()">ربط</button>
 </div>
 
-<div class="input-area" id="mainChat" style="display:none">
-    <input type="text" id="text" placeholder="اكتب رسالة...">
+<div id="chat"></div>
+
+<div id="mainChat" class="input-area" style="display: none;">
+    <input type="text" id="text" placeholder="اكتب رسالتك هنا...">
     <button class="btn" onclick="send()">إرسال</button>
 </div>
 
 <script>
-    let p, c;
-    function unlock() { if(document.getElementById('pass').value === "7777") document.getElementById('lock').style.display='none'; }
+let p, c;
+const SECRET_PASS = "7777";
+const ONE_DAY = 24 * 60 * 60 * 1000; // 24 ساعة
 
-    function start() {
-        const r = "room-" + document.getElementById('room').value;
-        if(!document.getElementById('room').value) return;
-        
-        p = new Peer(r);
-        p.on('open', () => { showChat("تم فتح الغرفة، اطلب منها الدخول بنفس الاسم"); });
-        p.on('connection', conn => { c = conn; listen(); });
-        p.on('error', (err) => {
-            if(err.type === 'id-taken') {
-                p = new Peer();
-                p.on('open', () => {
-                    c = p.connect(r);
-                    listen();
-                });
-            }
-        });
+// 1. فتح القفل وتحميل الأرشيف
+function unlock() {
+    if(document.getElementById('pass').value === SECRET_PASS) {
+        document.getElementById('lock').style.display = 'none';
+        loadHistory();
+    } else {
+        alert("الرمز غير صحيح!");
     }
+}
 
-    function listen() {
-        c.on('open', () => { 
-            showChat("✅ متصلان الآن! ابدأ المراسلة");
-            document.getElementById('setup').style.display='none';
-            document.getElementById('mainChat').style.display='flex';
-        });
-        c.on('data', data => addMsg(data, 'rcvd'));
+// 2. بدء الاتصال
+function start() {
+    const roomId = "room-" + document.getElementById('room').value;
+    if(!document.getElementById('room').value) return alert("يرجى إدخال اسم الغرفة");
+
+    p = new Peer(roomId);
+    
+    p.on('open', () => {
+        addSystemMsg("تم فتح الغرفة. اطلب منها الدخول بنفس الاسم.");
+    });
+
+    p.on('connection', conn => {
+        c = conn;
+        setupConnection();
+    });
+
+    p.on('error', (err) => {
+        if(err.type === 'id-taken') {
+            p = new Peer(); 
+            p.on('open', () => {
+                c = p.connect(roomId);
+                setupConnection();
+            });
+        }
+    });
+}
+
+function setupConnection() {
+    c.on('open', () => {
+        addSystemMsg("✅ متصلان الآن!");
+        document.getElementById('setup').style.display = 'none';
+        document.getElementById('mainChat').style.display = 'flex';
+    });
+    c.on('data', data => addMsg(data, 'rcvd'));
+}
+
+// 3. إرسال الرسائل
+function send() {
+    const m = document.getElementById('text').value;
+    if(c && m) {
+        c.send(m);
+        addMsg(m, 'sent');
+        document.getElementById('text').value = '';
     }
+}
 
-    function send() {
-        const m = document.getElementById('text').value;
-        if(c && m) { c.send(m); addMsg(m, 'sent'); document.getElementById('text').value=''; }
-    }
+// 4. إدارة الرسائل والتخزين
+function addMsg(text, type, time = Date.now()) {
+    const d = document.createElement('div');
+    d.className = 'msg ' + type;
+    d.innerText = text;
+    document.getElementById('chat').appendChild(d);
+    document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
 
-    function addMsg(t, s) {
+    // حفظ في التخزين المحلي
+    saveToLocal(text, type, time);
+}
+
+function addSystemMsg(t) {
+    const d = document.createElement('div');
+    d.className = 'system-msg';
+    d.innerText = t;
+    document.getElementById('chat').appendChild(d);
+}
+
+function saveToLocal(text, sender, timestamp) {
+    let history = JSON.parse(localStorage.getItem('private_chat_v1') || '[]');
+    history.push({ text, sender, timestamp });
+    localStorage.setItem('private_chat_v1', JSON.stringify(history));
+}
+
+function loadHistory() {
+    const now = Date.now();
+    let history = JSON.parse(localStorage.getItem('private_chat_v1') || '[]');
+    
+    // تصفية الرسائل (أقل من 24 ساعة)
+    const validHistory = history.filter(m => (now - m.timestamp) < ONE_DAY);
+    localStorage.setItem('private_chat_v1', JSON.stringify(validHistory));
+
+    validHistory.forEach(m => {
         const d = document.createElement('div');
-        d.className = 'msg ' + s; d.innerText = t;
+        d.className = 'msg ' + m.sender;
+        d.innerText = m.text;
         document.getElementById('chat').appendChild(d);
-        document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
-    }
+    });
+    document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+}
 
-    function showChat(t) { addMsg(t, 'rcvd'); }
+// دعم الإرسال عبر زر Enter
+document.getElementById('text').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') send();
+});
 </script>
+
 </body>
 </html>
