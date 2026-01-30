@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مساحتنا الخاصة ❤️</title>
     <style>
-        body { font-family: sans-serif; background: #0e0e0e; color: white; margin: 0; height: 100vh; display: flex; flex-direction: column; }
+        body { font-family: sans-serif; background: #0e0e0e; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; }
         .header { background: #24A1DE; padding: 15px; text-align: center; font-weight: bold; }
         #chat { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 10px 15px; border-radius: 18px; max-width: 75%; word-wrap: break-word; }
+        .msg { padding: 12px; border-radius: 15px; max-width: 80%; word-wrap: break-word; }
         .sent { align-self: flex-end; background: #24A1DE; color: white; }
-        .rcvd { align-self: flex-start; background: #2b2b2b; color: #eee; }
+        .rcvd { align-self: flex-start; background: #2b2b2b; color: white; }
         .input-area { padding: 15px; background: #1a1a1a; display: flex; gap: 10px; }
         input { flex: 1; padding: 12px; border-radius: 25px; border: none; background: #2b2b2b; color: white; outline: none; }
         .btn { background: #24A1DE; color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; }
@@ -18,17 +18,17 @@
 </head>
 <body>
 
-<div class="header">❤️ مساحة الحب الخاصة ❤️</div>
+<div class="header">❤️ دردشة تليجرام المباشرة ❤️</div>
 <div id="chat"></div>
 
 <div class="input-area">
-    <input type="text" id="text" placeholder="اكتب رسالتك هنا...">
+    <input type="text" id="text" placeholder="اكتب رسالة...">
     <button class="btn" onclick="send()">إرسال</button>
 </div>
 
 <script>
-// البيانات التي استخرجتها أنت
-const BOT_TOKEN = '8489049509:AAE_B6c369VVYzcrmrX1swS4EDlaj0e0VIg';
+// بياناتك المستخرجة من الصور
+const TOKEN = '8489049509:AAE_B6c369VVYzcrmrX1swS4EDlaj0e0VIg';
 const CHAT_ID = '6837507867';
 
 async function send() {
@@ -36,45 +36,51 @@ async function send() {
     const msg = input.value.trim();
     if(!msg) return;
 
-    // مسح الشريط فوراً لإعطاء شعور بالسرعة
-    input.value = '';
-
+    // محاولة الإرسال
     try {
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        const url = `https://api.telegram.org/bot${TOKEN}/sendMessage`;
+        const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: CHAT_ID, text: msg })
         });
-        fetchMessages();
+
+        if (response.ok) {
+            input.value = ''; // مسح الشريط فقط عند نجاح الإرسال
+            appendMessage(msg, 'sent');
+        } else {
+            const err = await response.json();
+            alert("فشل الإرسال: " + err.description);
+        }
     } catch (e) {
-        alert("تأكد من ضغط Start في البوت أولاً!");
-        input.value = msg; // إعادة النص في حال فشل الإرسال
+        alert("مشكلة في الاتصال بالإنترنت أو تليجرام");
     }
 }
 
-async function fetchMessages() {
-    try {
-        const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=-10`);
-        const data = await res.json();
-        const chatBox = document.getElementById('chat');
-        if(data.result) {
-            chatBox.innerHTML = '';
-            data.result.forEach(u => {
-                if(u.message && u.message.text) {
-                    const div = document.createElement('div');
-                    // تمييز رسائلك (التي أرسلتها عبر الموقع)
-                    div.className = 'msg ' + (u.message.chat.id == CHAT_ID ? 'sent' : 'rcvd');
-                    div.innerText = u.message.text;
-                    chatBox.appendChild(div);
-                }
-            });
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-    } catch (e) {}
+function appendMessage(text, type) {
+    const chat = document.getElementById('chat');
+    const div = document.createElement('div');
+    div.className = 'msg ' + type;
+    div.innerText = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
 }
 
-setInterval(fetchMessages, 3000);
-fetchMessages();
+// جلب الرسائل القادمة من البوت
+async function fetchUpdates() {
+    try {
+        const res = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?offset=-1`);
+        const data = await res.json();
+        if(data.result && data.result.length > 0) {
+            const lastMsg = data.result[0].message;
+            // عرض الرسائل التي ليست من الموقع (أي التي تُكتب مباشرة في تليجرام)
+            if(lastMsg.chat.id == CHAT_ID && !lastMsg.text.includes("الموقع:")) {
+                // يمكنك إضافة منطق لعرض الرسائل المستقبلة هنا
+            }
+        }
+    } catch(e){}
+}
+setInterval(fetchUpdates, 3000);
 </script>
 </body>
 </html>
