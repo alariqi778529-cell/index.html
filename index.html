@@ -3,100 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مساحتنا الخاصة الآمنة</title>
+    <title>مساحتنا الخاصة</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        :root { --main-color: #ff4b2b; --bg: #1a1a1a; }
+        :root { --main: #ff4b2b; --bg: #121212; }
         body { font-family: sans-serif; background: var(--bg); color: white; margin: 0; height: 100vh; display: flex; flex-direction: column; }
-        
-        /* قفل الأمان */
         #lock { position: fixed; inset: 0; background: white; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #lock input { padding: 10px; border: 2px solid var(--main-color); border-radius: 20px; text-align: center; margin-bottom: 10px; }
-        
-        .header { background: var(--main-color); padding: 15px; text-align: center; font-weight: bold; }
-        .info { font-size: 12px; padding: 5px; background: #333; text-align: center; }
+        #lock input { padding: 12px; border: 2px solid var(--main); border-radius: 25px; text-align: center; margin-bottom: 15px; font-size: 18px; }
+        .header { background: var(--main); padding: 15px; text-align: center; font-weight: bold; font-size: 18px; }
         #chat { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 10px 15px; border-radius: 18px; max-width: 75%; word-wrap: break-word; }
-        .sent { align-self: flex-end; background: var(--main-color); }
-        .rcvd { align-self: flex-start; background: #444; }
-        
-        .controls { padding: 15px; background: #222; display: flex; gap: 10px; border-top: 1px solid #444; }
-        input { flex: 1; padding: 10px; border-radius: 20px; border: none; outline: none; }
-        button { background: var(--main-color); border: none; color: white; padding: 10px 20px; border-radius: 20px; cursor: pointer; }
+        .msg { padding: 10px 15px; border-radius: 18px; max-width: 75%; font-size: 15px; line-height: 1.4; }
+        .sent { align-self: flex-end; background: var(--main); color: white; }
+        .rcvd { align-self: flex-start; background: #333; color: #eee; }
+        .controls { padding: 15px; background: #1e1e1e; display: flex; gap: 8px; }
+        input { flex: 1; padding: 12px; border-radius: 25px; border: none; outline: none; background: #333; color: white; }
+        button { background: var(--main); border: none; color: white; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 18px; }
     </style>
 </head>
 <body>
 
 <div id="lock">
     <h2 style="color:black">🔒 أدخل الرمز السري</h2>
-    <input type="password" id="pass" placeholder="****">
-    <button onclick="unlock()">دخول</button>
+    <input type="password" id="pass" placeholder="7777">
+    <button onclick="unlock()" style="width:100px; border-radius:10px">دخول</button>
 </div>
 
-<div class="header">❤️ مكاننا السري المتصل ❤️</div>
-<div class="info">
-    مُعرفك: <span id="my-id">جاري الاتصال...</span><br>
-    <input type="text" id="peer-id-input" placeholder="ضع معرف حبيبتك هنا للربط" style="margin-top:5px; max-width:200px; height:20px; font-size:10px;">
-    <button onclick="connectToPeer()" style="padding:2px 10px; font-size:10px;">ربط الآن</button>
-</div>
+<div class="header">❤️ مكاننا السري ❤️</div>
 
-<div id="chat"></div>
+<div id="chat">
+    <div class="msg rcvd">أهلاً بك.. ادخل "اسم الغرفة" المتفق عليه لنتصل ببعضنا.</div>
+</div>
 
 <div class="controls">
-    <input type="text" id="msg-input" placeholder="اكتب رسالتك هنا...">
-    <button onclick="send()">إرسال</button>
+    <input type="text" id="roomInput" placeholder="اكتب اسم الغرفة السرية...">
+    <button onclick="startRoom()">🔗</button>
+</div>
+
+<div class="controls" id="msgArea" style="display:none">
+    <input type="text" id="msgInput" placeholder="اكتب رسالة هنا...">
+    <button onclick="sendMsg()">✈️</button>
 </div>
 
 <script>
-    const SECRET = "7777";
-    let peer = new Peer();
-    let conn;
+    let peer, conn;
+    const PASS = "7777";
 
     function unlock() {
-        if(document.getElementById('pass').value === SECRET) {
-            document.getElementById('lock').style.display = 'none';
-        } else { alert("الرمز خطأ!"); }
+        if(document.getElementById('pass').value === PASS) document.getElementById('lock').style.display = 'none';
+        else alert("خطأ!");
     }
 
-    peer.on('open', id => { document.getElementById('my-id').innerText = id; });
-
-    // استقبال الاتصال
-    peer.on('connection', c => {
-        conn = c;
-        setupChat();
-    });
-
-    function connectToPeer() {
-        const id = document.getElementById('peer-id-input').value;
-        conn = peer.connect(id);
-        setupChat();
-    }
-
-    function setupChat() {
-        conn.on('data', data => {
-            appendMsg(data, 'rcvd');
+    function startRoom() {
+        const roomName = "room-" + document.getElementById('roomInput').value;
+        if(!roomName) return alert("ادخل اسم الغرفة");
+        
+        peer = new Peer(roomName);
+        
+        peer.on('open', () => {
+            appendMsg("تم فتح الغرفة: " + document.getElementById('roomInput').value, 'rcvd');
+            document.getElementById('roomInput').parentElement.style.display = 'none';
+            document.getElementById('msgArea').style.display = 'flex';
         });
-        alert("تم الاتصال بنجاح! يمكنكما المراسلة الآن.");
+
+        peer.on('connection', (c) => {
+            conn = c;
+            setupConn();
+        });
+
+        peer.on('error', (err) => {
+            if(err.type === 'id-taken') { // الغرفة محجوزة، لنحاول الاتصال بها
+                peer = new Peer();
+                peer.on('open', () => {
+                    conn = peer.connect(roomName);
+                    setupConn();
+                    document.getElementById('roomInput').parentElement.style.display = 'none';
+                    document.getElementById('msgArea').style.display = 'flex';
+                });
+            }
+        });
     }
 
-    function send() {
-        const val = document.getElementById('msg-input').value;
-        if(val && conn) {
-            conn.send(val);
-            appendMsg(val, 'sent');
-            document.getElementById('msg-input').value = '';
+    function setupConn() {
+        conn.on('data', data => appendMsg(data, 'rcvd'));
+        appendMsg("متصل الآن مع الطرف الآخر ❤️", 'rcvd');
+    }
+
+    function sendMsg() {
+        const m = document.getElementById('msgInput').value;
+        if(m && conn) {
+            conn.send(m);
+            appendMsg(m, 'sent');
+            document.getElementById('msgInput').value = '';
         }
     }
 
-    function appendMsg(text, type) {
-        const div = document.createElement('div');
-        div.className = `msg ${type}`;
-        div.innerText = text;
-        const chat = document.getElementById('chat');
-        chat.appendChild(div);
-        chat.scrollTop = chat.scrollHeight;
+    function appendMsg(t, type) {
+        const d = document.createElement('div');
+        d.className = 'msg ' + type;
+        d.innerText = t;
+        const c = document.getElementById('chat');
+        c.appendChild(d);
+        c.scrollTop = c.scrollHeight;
     }
 </script>
 </body>
 </html>
- 
