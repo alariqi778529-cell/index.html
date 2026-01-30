@@ -4,131 +4,128 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مساحتنا الخاصة ❤️</title>
-    <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { font-family: sans-serif; background: #121212; color: white; margin: 0; height: 100vh; display: flex; flex-direction: column; }
+        body { font-family: sans-serif; background: #121212; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; }
         #lock { position: fixed; inset: 0; background: #1a1a1a; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .header { background: #ff4b2b; padding: 15px; text-align: center; font-weight: bold; border-bottom: 2px solid #222; }
+        .header { background: #ff4b2b; padding: 15px; text-align: center; font-weight: bold; }
         #chat { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 12px 16px; border-radius: 18px; max-width: 75%; word-wrap: break-word; line-height: 1.4; }
-        .sent { align-self: flex-end; background: #ff4b2b; color: white; border-bottom-right-radius: 2px; }
-        .rcvd { align-self: flex-start; background: #333; color: white; border-bottom-left-radius: 2px; }
-        .time { font-size: 0.65rem; opacity: 0.7; display: block; margin-top: 5px; }
+        .msg { padding: 12px; border-radius: 15px; max-width: 80%; word-wrap: break-word; }
+        .sent { align-self: flex-end; background: #ff4b2b; }
+        .rcvd { align-self: flex-start; background: #333; }
         .input-area { padding: 15px; background: #1e1e1e; display: flex; gap: 8px; border-top: 1px solid #333; }
         input { flex: 1; padding: 12px; border-radius: 25px; border: none; background: #333; color: white; outline: none; text-align: center; }
-        .btn { background: #ff4b2b; color: white; border: none; padding: 10px 22px; border-radius: 25px; cursor: pointer; font-weight: bold; }
+        .btn { background: #ff4b2b; color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; }
+        .id-display { font-size: 0.8rem; color: #888; padding: 5px; text-align: center; }
     </style>
 </head>
 <body>
 
 <div id="lock">
-    <h2>🔒 مساحة خاصة</h2>
-    <input type="password" id="pass" placeholder="الرمز السري (7777)">
+    <h2>🔒 ادخل الرمز (7777)</h2>
+    <input type="password" id="pass" placeholder="7777">
     <br>
     <button class="btn" onclick="unlock()">دخول</button>
 </div>
 
 <div class="header">❤️ مساحتنا الخاصة ❤️</div>
+<div id="idShow" class="id-display">جاري تجهيز اتصالك...</div>
+
+<div id="setup" style="padding: 20px; text-align: center;">
+    <input type="text" id="peerIdInput" placeholder="أدخل رمز هاتف حبيبتك هنا">
+    <button class="btn" onclick="connectToPeer()">اتصال</button>
+</div>
+
 <div id="chat"></div>
 
 <div id="mainChat" class="input-area" style="display: none;">
-    <input type="text" id="text" placeholder="اكتب رسالتك هنا...">
-    <button class="btn" id="sendBtn" onclick="send()">إرسال</button>
+    <input type="text" id="text" placeholder="اكتب هنا...">
+    <button class="btn" onclick="send()">إرسال</button>
 </div>
 
 <script>
+let peer, conn;
 const PASS = "7777";
 const LIMIT = 24 * 60 * 60 * 1000;
-const myId = 'user_' + Math.random().toString(36).substr(2, 4);
-
-// إعداد خدمة المراسلة بمفاتيح تجريبية تعمل فوراً
-const pubnub = new PubNub({
-    publishKey: 'pub-c-4b360742-9904-4536-a141-8f553f185794',
-    subscribeKey: 'sub-c-5768e718-d93a-4416-8c90-8e100806443c',
-    uuid: myId
-});
 
 function unlock() {
     if(document.getElementById('pass').value === PASS) {
-        document.getElementById('lock').style.display = 'none';
-        document.getElementById('mainChat').style.display = 'flex';
-        initApp();
-    } else { alert("الرمز خطأ!"); }
+        document.getElementById('lock').style.display='none';
+        loadHistory();
+        initPeer();
+    } else { alert("خطأ!"); }
 }
 
-function initApp() {
-    loadHistory(); // تحميل من ذاكرة الهاتف
-    
-    // الاستماع للرسائل الجديدة
-    pubnub.addListener({
-        message: function(event) {
-            const data = event.message;
-            renderMsg(data.text, data.sender === myId ? 'sent' : 'rcvd', data.time);
-            saveLocal(data.text, data.sender === myId ? 'sent' : 'rcvd', data.time);
-        }
+function initPeer() {
+    // إنشاء رمز عشوائي بسيط لكل هاتف
+    const mySimpleId = 'love-' + Math.floor(1000 + Math.random() * 9000);
+    peer = new Peer(mySimpleId);
+
+    peer.on('open', (id) => {
+        document.getElementById('idShow').innerText = "رمز هاتفك هو: " + id;
     });
 
-    pubnub.subscribe({ channels: ['our_private_chat_7777'] });
+    // استقبال الاتصال
+    peer.on('connection', (c) => {
+        conn = c;
+        setupChat();
+    });
+}
+
+function connectToPeer() {
+    const targetId = document.getElementById('peerIdInput').value;
+    if(!targetId) return alert("أدخل الرمز أولاً");
+    conn = peer.connect(targetId);
+    setupChat();
+}
+
+function setupChat() {
+    conn.on('open', () => {
+        document.getElementById('setup').style.display = 'none';
+        document.getElementById('idShow').innerText = "✅ متصل الآن";
+        document.getElementById('mainChat').style.display = 'flex';
+    });
+    conn.on('data', data => renderMsg(data, 'rcvd'));
 }
 
 function send() {
-    const input = document.getElementById('text');
-    const content = input.value.trim();
-    if(!content) return;
-
-    // تعطيل الزر مؤقتاً لمنع التكرار
-    document.getElementById('sendBtn').disabled = true;
-
-    pubnub.publish({
-        channel: 'our_private_chat_7777',
-        message: { text: content, sender: myId, time: Date.now() }
-    }, function(status, response) {
-        document.getElementById('sendBtn').disabled = false;
-        if (!status.error) {
-            input.value = ''; // مسح النص عند النجاح فقط
-        }
-    });
+    const m = document.getElementById('text').value;
+    if(conn && m) {
+        conn.send(m);
+        renderMsg(m, 'sent');
+        document.getElementById('text').value = '';
+    }
 }
 
-function renderMsg(text, type, time) {
-    const chatBox = document.getElementById('chat');
+function renderMsg(t, type, time = Date.now()) {
     const d = document.createElement('div');
     d.className = 'msg ' + type;
-    const timeStr = new Date(time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    d.innerHTML = `${text} <span class="time">${timeStr}</span>`;
-    chatBox.appendChild(d);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    d.innerText = t;
+    document.getElementById('chat').appendChild(d);
+    document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+    saveLocal(t, type, time);
 }
 
 function saveLocal(t, s, tm) {
-    let logs = JSON.parse(localStorage.getItem('chat_v5') || '[]');
-    // التأكد من عدم تكرار حفظ نفس الرسالة
+    let logs = JSON.parse(localStorage.getItem('chat_final_v10') || '[]');
     if(!logs.find(m => m.tm === tm)) {
         logs.push({t, s, tm});
-        localStorage.setItem('chat_v5', JSON.stringify(logs));
+        localStorage.setItem('chat_final_v10', JSON.stringify(logs));
     }
 }
 
 function loadHistory() {
     const now = Date.now();
-    let logs = JSON.parse(localStorage.getItem('chat_v5') || '[]');
+    let logs = JSON.parse(localStorage.getItem('chat_final_v10') || '[]');
     const filtered = logs.filter(m => (now - m.tm) < LIMIT);
-    localStorage.setItem('chat_v5', JSON.stringify(filtered));
-    
-    document.getElementById('chat').innerHTML = '';
+    localStorage.setItem('chat_final_v10', JSON.stringify(filtered));
     filtered.forEach(m => {
         const d = document.createElement('div');
         d.className = 'msg ' + m.s;
-        const timeStr = new Date(m.tm).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        d.innerHTML = `${m.t} <span class="time">${timeStr}</span>`;
+        d.innerText = m.t;
         document.getElementById('chat').appendChild(d);
     });
 }
-
-document.getElementById('text').addEventListener('keypress', (e) => {
-    if(e.key === 'Enter') send();
-});
 </script>
-
 </body>
 </html>
