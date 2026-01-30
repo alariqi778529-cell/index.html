@@ -4,16 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مساحتنا الخاصة ❤️</title>
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <style>
         body { font-family: sans-serif; background: #121212; color: white; margin: 0; height: 100vh; display: flex; flex-direction: column; }
         #lock { position: fixed; inset: 0; background: #1a1a1a; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .header { background: #ff4b2b; padding: 15px; text-align: center; font-weight: bold; }
         #chat { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 12px; border-radius: 15px; max-width: 80%; word-wrap: break-word; position: relative; }
-        .sent { align-self: flex-end; background: #ff4b2b; border-bottom-right-radius: 2px; }
-        .rcvd { align-self: flex-start; background: #333; border-bottom-left-radius: 2px; }
+        .msg { padding: 12px; border-radius: 15px; max-width: 80%; word-wrap: break-word; }
+        .sent { align-self: flex-end; background: #ff4b2b; }
+        .rcvd { align-self: flex-start; background: #333; }
         .input-area { padding: 15px; background: #1e1e1e; display: flex; gap: 8px; border-top: 1px solid #333; }
-        input { flex: 1; padding: 12px; border-radius: 25px; border: none; background: #333; color: white; outline: none; }
+        input { flex: 1; padding: 12px; border-radius: 25px; border: none; background: #333; color: white; outline: none; text-align: center; }
         .btn { background: #ff4b2b; color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; }
         .time { font-size: 0.7rem; opacity: 0.6; display: block; margin-top: 5px; }
     </style>
@@ -21,8 +22,8 @@
 <body>
 
 <div id="lock">
-    <h2 style="color: white;">🔒 ادخل الرمز السري</h2>
-    <input type="password" id="pass" placeholder="7777" style="max-width: 200px;">
+    <h2 style="color: white;">🔒 الرمز السري</h2>
+    <input type="password" id="pass" placeholder="7777">
     <br>
     <button class="btn" onclick="unlock()">دخول</button>
 </div>
@@ -31,82 +32,70 @@
 
 <div id="chat"></div>
 
-<div id="mainChat" class="input-area">
-    <input type="text" id="text" placeholder="اكتب رسالتك هنا...">
+<div id="mainChat" class="input-area" style="display: none;">
+    <input type="text" id="text" placeholder="اكتب هنا...">
     <button class="btn" onclick="send()">إرسال</button>
 </div>
 
 <script>
-// إعدادات بسيطة
+const gun = Gun(['https://gun-manhattan.herokuapp.com/gun']); // خادم المزامنة المجاني
 const PASS = "7777";
-const LIMIT = 24 * 60 * 60 * 1000; // 24 ساعة بالملي ثانية
-const STORAGE_KEY = "our_private_space_v3";
-
-// معرف المستخدم (للتفريق بين المرسل والمستقبل على نفس الجهاز)
-// في المتصفح الأول سيكون UserA وفي الثاني UserB تلقائياً للتجربة
-if(!sessionStorage.getItem('my_id')) {
-    sessionStorage.setItem('my_id', 'user_' + Math.floor(Math.random() * 1000));
-}
-const myId = sessionStorage.getItem('my_id');
+const LIMIT = 24 * 60 * 60 * 1000; 
+const myId = Math.random().toString(36).substr(2, 9); // معرف فريد لكل نافذة متصفح
 
 function unlock() {
     if(document.getElementById('pass').value === PASS) {
         document.getElementById('lock').style.display='none';
-        startSync();
-    } else { alert("الرمز خطأ!"); }
+        document.getElementById('mainChat').style.display='flex';
+        startChat();
+    } else { alert("خطأ!"); }
+}
+
+function startChat() {
+    // نستخدم اسم غرفة ثابت "our_private_room_7777"
+    const room = gun.get('our_private_room_7777');
+
+    // استقبال الرسائل فوراً
+    room.map().on((data, id) => {
+        if (!data || !data.text) return;
+        
+        // التحقق من الوقت (حذف بعد 24 ساعة)
+        const now = Date.now();
+        if (now - data.time > LIMIT) return;
+
+        // منع تكرار الرسالة في الواجهة
+        if (document.getElementById(id)) return;
+
+        renderMsg(data, id);
+    });
 }
 
 function send() {
     const input = document.getElementById('text');
-    const text = input.value.trim();
-    if(!text) return;
+    const txt = input.value.trim();
+    if(!txt) return;
 
-    const msg = {
-        id: Math.random().toString(36).substr(2, 9),
+    const msgId = Math.random().toString(36).substr(2, 9);
+    gun.get('our_private_room_7777').get(msgId).put({
+        text: txt,
         sender: myId,
-        text: text,
         time: Date.now()
-    };
+    });
 
-    let logs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    logs.push(msg);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
-    
     input.value = '';
-    render();
 }
 
-function render() {
+function renderMsg(data, id) {
     const chat = document.getElementById('chat');
-    const now = Date.now();
-    let logs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    
-    // فلترة وحذف الرسائل القديمة (أكبر من 24 ساعة)
-    const validLogs = logs.filter(m => (now - m.time) < LIMIT);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(validLogs));
-
-    chat.innerHTML = '';
-    validLogs.forEach(m => {
-        const d = document.createElement('div');
-        // إذا كان الـ ID هو جهازي الحالي تظهر كـ sent (يمين)
-        d.className = 'msg ' + (m.sender === myId ? 'sent' : 'rcvd');
-        d.innerHTML = `${m.text} <span class="time">${new Date(m.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>`;
-        chat.appendChild(d);
-    });
+    const d = document.createElement('div');
+    d.id = id;
+    d.className = 'msg ' + (data.sender === myId ? 'sent' : 'rcvd');
+    d.innerHTML = `${data.text} <span class="time">${new Date(data.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>`;
+    chat.appendChild(d);
     chat.scrollTop = chat.scrollHeight;
 }
 
-// تحديث الشاشة كل ثانية لمشاهدة رسائل الطرف الآخر (مزامنة محلية)
-function startSync() {
-    render();
-    setInterval(render, 1000);
-}
-
-// إرسال بالضغط على Enter
-document.getElementById('text').addEventListener('keypress', (e) => {
-    if(e.key === 'Enter') send();
-});
+document.getElementById('text').addEventListener('keypress', (e) => { if(e.key === 'Enter') send(); });
 </script>
-
 </body>
 </html>
