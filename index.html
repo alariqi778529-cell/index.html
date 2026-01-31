@@ -5,24 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مساحتنا الخاصة ❤️</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0a0a0a; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         #lock { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .header { background: #b33939; padding: 15px; text-align: center; font-weight: bold; border-bottom: 2px solid #222; }
-        #chat { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #0e0e0e; }
-        .msg { padding: 10px 18px; border-radius: 20px; max-width: 80%; word-wrap: break-word; font-size: 1rem; line-height: 1.5; }
+        .header { background: #b33939; padding: 15px; text-align: center; font-weight: bold; border-bottom: 2px solid #222; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        #chat { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #0e0e0e; scroll-behavior: smooth; }
+        .msg { padding: 10px 18px; border-radius: 20px; max-width: 80%; word-wrap: break-word; font-size: 1rem; line-height: 1.5; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .sent { align-self: flex-end; background: #b33939; color: white; border-bottom-right-radius: 4px; }
         .rcvd { align-self: flex-start; background: #2c2c2c; color: #eee; border-bottom-left-radius: 4px; }
-        .input-area { padding: 15px; background: #111; display: none; gap: 10px; border-top: 1px solid #333; }
+        .input-area { padding: 15px; background: #111; display: none; gap: 10px; border-top: 1px solid #333; align-items: center; }
         input[type="text"] { flex: 1; padding: 12px 20px; border-radius: 30px; border: none; background: #222; color: white; outline: none; }
-        .btn { background: #b33939; color: white; border: none; padding: 10px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; }
+        input[type="password"] { padding: 12px; border-radius: 12px; border: 1px solid #b33939; background: #111; color: white; text-align: center; margin-bottom: 15px; width: 200px; }
+        .btn { background: #b33939; color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
 
 <div id="lock">
-    <h2 style="color: #b33939;">❤️ مساحتنا الخاصة ❤️</h2>
-    <input type="password" id="passInput" style="padding:10px; border-radius:10px; text-align:center;" placeholder="أدخل الرمز (7777)">
-    <br>
+    <h2 style="color: #b33939; margin-bottom: 20px;">❤️ مساحتنا الخاصة ❤️</h2>
+    <input type="password" id="passInput" placeholder="أدخل الرمز السري">
     <button class="btn" onclick="checkPass()">دخول</button>
 </div>
 
@@ -30,16 +32,18 @@
 <div id="chat"></div>
 
 <div id="inputBox" class="input-area">
-    <input type="text" id="msgInput" placeholder="اكتب رسالتك هنا..." onkeypress="if(event.key==='Enter') send()">
+    <input type="text" id="msgInput" placeholder="اكتب رسالتك هنا..." autocomplete="off" onkeypress="if(event.key==='Enter') send()">
     <button class="btn" onclick="send()">إرسال</button>
 </div>
 
 <script>
-// البيانات المؤكدة من صورك
+// البيانات النهائية المستخرجة من صورك
 const TOKEN = '8489049509:AAE_B6c369VVYzcrmrX1swS4EDlaj0eOVIg';
-const GROUP_ID = '-5153197189'; // تأكد من وجود علامة السالب
+const GROUP_ID = '-5153197189';
 const MY_USER_ID = '6837507867';
 const PASS = "7777";
+
+let allMessages = []; // ذاكرة لحفظ الرسائل ومنع اختفائها
 
 function checkPass() {
     if(document.getElementById('passInput').value === PASS) {
@@ -47,7 +51,7 @@ function checkPass() {
         document.getElementById('inputBox').style.display = 'flex';
         updateChat();
         setInterval(updateChat, 3000); 
-    } else { alert("الرمز خطأ!"); }
+    } else { alert("الرمز خطأ! ❌"); }
 }
 
 async function send() {
@@ -55,52 +59,62 @@ async function send() {
     const text = input.value.trim();
     if(!text) return;
 
-    // استخدام POST بدلاً من GET لضمان وصول الرسالة للجروب
     const url = `https://api.telegram.org/bot${TOKEN}/sendMessage`;
-    const body = JSON.stringify({
-        chat_id: GROUP_ID,
-        text: text
-    });
-
     try {
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: body
+            body: JSON.stringify({ chat_id: GROUP_ID, text: text })
         });
-        const result = await response.json();
-        if(result.ok) {
+        if(response.ok) {
             input.value = ''; 
-            updateChat();
-        } else {
-            console.error("فشل الإرسال من تليجرام:", result.description);
+            updateChat(); 
         }
-    } catch(e) { console.error("Error sending"); }
+    } catch(e) { console.error("فشل الإرسال"); }
 }
 
 async function updateChat() {
     try {
-        // جلب آخر التحديثات
+        // جلب آخر 20 تحديث
         const res = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?offset=-20&limit=20`);
         const data = await res.json();
         const chatElement = document.getElementById('chat');
         
         if(data.ok && data.result.length > 0) {
-            let html = "";
+            let hasNew = false;
             data.result.forEach(u => {
-                // فلترة الرسائل لتظهر فقط الخاصة بالجروب المحدد
                 if(u.message && u.message.chat.id == GROUP_ID && u.message.text) {
-                    const isFromMe = u.message.from.id == MY_USER_ID;
-                    html += `<div class="msg ${isFromMe ? 'sent' : 'rcvd'}">${u.message.text}</div>`;
+                    const msgId = u.message.message_id;
+                    // التحقق إذا كانت الرسالة موجودة مسبقاً في الذاكرة
+                    if (!allMessages.some(m => m.id === msgId)) {
+                        allMessages.push({
+                            id: msgId,
+                            text: u.message.text,
+                            fromId: u.message.from.id
+                        });
+                        hasNew = true;
+                    }
                 }
             });
-            if(html !== "") {
-                chatElement.innerHTML = html;
-                chatElement.scrollTop = chatElement.scrollHeight;
+
+            if (hasNew) {
+                renderMessages();
             }
         }
-    } catch(e) { console.error("Error updating"); }
+    } catch(e) { console.error("خطأ في التحديث"); }
+}
+
+function renderMessages() {
+    const chatElement = document.getElementById('chat');
+    let html = "";
+    allMessages.forEach(m => {
+        const isMe = m.fromId == MY_USER_ID;
+        html += `<div class="msg ${isMe ? 'sent' : 'rcvd'}">${m.text}</div>`;
+    });
+    chatElement.innerHTML = html;
+    chatElement.scrollTop = chatElement.scrollHeight;
 }
 </script>
+
 </body>
 </html>
