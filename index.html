@@ -5,31 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مساحتنا الخاصة ❤️</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0a0a0a; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        #lock { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.5s; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #lock { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .header { background: #b33939; padding: 15px; text-align: center; font-weight: bold; border-bottom: 2px solid #222; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        #chat { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #0e0e0e; scroll-behavior: smooth; }
+        #chat { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #0e0e0e; }
         
         /* تصميم الرسائل */
-        .msg { padding: 10px 18px; border-radius: 20px; max-width: 80%; word-wrap: break-word; font-size: 1rem; line-height: 1.5; position: relative; animation: fadeIn 0.3s ease; }
+        .msg { padding: 10px 18px; border-radius: 20px; max-width: 80%; word-wrap: break-word; font-size: 1rem; line-height: 1.5; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* رسائلك أنت (ليمين) */
+        /* رسائلك (اليمين) */
         .sent { align-self: flex-end; background: #b33939; color: white; border-bottom-right-radius: 4px; }
-        /* رسائل الطرف الآخر (ليسار) */
+        /* رسائلها (اليسار) */
         .rcvd { align-self: flex-start; background: #2c2c2c; color: #eee; border-bottom-left-radius: 4px; }
         
-        .input-area { padding: 15px; background: #111; display: none; gap: 10px; border-top: 1px solid #333; align-items: center; }
-        input[type="text"] { flex: 1; padding: 12px 20px; border-radius: 30px; border: 1px solid #333; background: #222; color: white; outline: none; }
-        input[type="password"] { padding: 12px; border-radius: 12px; border: 1px solid #b33939; background: #111; color: white; text-align: center; margin-bottom: 15px; width: 200px; }
-        .btn { background: #b33939; color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn:active { transform: scale(0.95); opacity: 0.8; }
+        .input-area { padding: 15px; background: #111; display: none; gap: 10px; border-top: 1px solid #333; }
+        input[type="text"] { flex: 1; padding: 12px 20px; border-radius: 30px; border: none; background: #222; color: white; outline: none; }
+        input[type="password"] { padding: 12px; border-radius: 12px; border: 1px solid #b33939; background: #111; color: white; text-align: center; margin-bottom: 15px; }
+        .btn { background: #b33939; color: white; border: none; padding: 10px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="lock">
-    <h2 style="color: #b33939; margin-bottom: 20px;">❤️ مساحتنا الخاصة ❤️</h2>
+    <h2 style="color: #b33939;">❤️ مساحتنا الخاصة ❤️</h2>
     <input type="password" id="passInput" placeholder="أدخل الرمز السري">
     <button class="btn" onclick="checkPass()">دخول</button>
 </div>
@@ -43,24 +42,21 @@
 </div>
 
 <script>
-// البيانات المستخرجة من الصور التي أرفقتها
+// البيانات المستخرجة من صورك
 const TOKEN = '8489049509:AAE_B6c369VVYzcrmrX1swS4EDlaj0eOVIg';
-const GROUP_ID = '-5153197189'; // معرف المجموعة (جروب)
-const MY_USER_ID = '6837507867'; // رقمك التعريفي (AbOuD 4L4RIKY)
+const GROUP_ID = '-5153197189'; 
+const MY_USER_ID = '6837507867'; 
 const PASS = "7777";
 
-let lastUpdateId = 0;
+let lastMessages = ""; 
 
 function checkPass() {
     if(document.getElementById('passInput').value === PASS) {
-        document.getElementById('lock').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('lock').style.display = 'none';
-            document.getElementById('inputBox').style.display = 'flex';
-            updateChat();
-            setInterval(updateChat, 3000); 
-        }, 500);
-    } else { alert("الرمز خطأ يا بطل! ❌"); }
+        document.getElementById('lock').style.display = 'none';
+        document.getElementById('inputBox').style.display = 'flex';
+        updateChat();
+        setInterval(updateChat, 3000); 
+    } else { alert("الرمز خطأ!"); }
 }
 
 async function send() {
@@ -68,44 +64,40 @@ async function send() {
     const text = input.value.trim();
     if(!text) return;
 
-    // إرسال للمجموعة
     const url = `https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${GROUP_ID}&text=${encodeURIComponent(text)}`;
     input.value = ''; 
 
     try {
         await fetch(url);
         updateChat(); 
-    } catch(e) { console.error("فشل الإرسال"); }
+    } catch(e) { console.error("Send error"); }
 }
 
 async function updateChat() {
     try {
-        // جلب آخر 50 رسالة من المجموعة
-        const res = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?limit=50&allowed_updates=["message"]`);
+        // جلب آخر 20 رسالة من المجموعة
+        const res = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?offset=-20&limit=20`);
         const data = await res.json();
         const chatElement = document.getElementById('chat');
         
         if(data.ok && data.result.length > 0) {
-            chatElement.innerHTML = ''; 
+            let currentHTML = "";
             data.result.forEach(u => {
-                // التأكد أن الرسالة قادمة من المجموعة المحددة ولديها نص
                 if(u.message && u.message.chat.id == GROUP_ID && u.message.text) {
-                    const div = document.createElement('div');
-                    
-                    // إذا كان مرسل الرسالة هو أنت، تظهر يمين (sent)، وإذا كان غيرك تظهر يسار (rcvd)
                     const isFromMe = u.message.from.id == MY_USER_ID;
-                    div.className = 'msg ' + (isFromMe ? 'sent' : 'rcvd');
-                    div.innerText = u.message.text;
-                    
-                    chatElement.appendChild(div);
+                    const msgClass = isFromMe ? 'sent' : 'rcvd';
+                    currentHTML += `<div class="msg ${msgClass}">${u.message.text}</div>`;
                 }
             });
-            // نزول تلقائي لآخر رسالة
-            chatElement.scrollTop = chatElement.scrollHeight;
+
+            if (lastMessages !== currentHTML) {
+                chatElement.innerHTML = currentHTML;
+                lastMessages = currentHTML;
+                chatElement.scrollTop = chatElement.scrollHeight;
+            }
         }
-    } catch(e) { console.error("تعذر تحديث المحادثة"); }
+    } catch(e) { console.error("Update error"); }
 }
 </script>
-
 </body>
 </html>
