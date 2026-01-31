@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مساحتنا الخاصة ❤️</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0a0a0a; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         #lock { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .header { background: #b33939; padding: 15px; text-align: center; font-weight: bold; border-bottom: 2px solid #222; }
+        .header { background: #b33939; padding: 15px; text-align: center; font-weight: bold; border-bottom: 2px solid #222; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
         #chat { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #0e0e0e; }
         .msg { padding: 10px 18px; border-radius: 20px; max-width: 80%; word-wrap: break-word; font-size: 1rem; line-height: 1.5; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -15,15 +15,15 @@
         .rcvd { align-self: flex-start; background: #2c2c2c; color: #eee; border-bottom-left-radius: 4px; }
         .input-area { padding: 15px; background: #111; display: none; gap: 10px; border-top: 1px solid #333; }
         input[type="text"] { flex: 1; padding: 12px 20px; border-radius: 30px; border: none; background: #222; color: white; outline: none; }
+        input[type="password"] { padding: 10px; border-radius: 10px; border: 1px solid #b33939; background: #000; color: #fff; text-align: center; margin-bottom: 15px; }
         .btn { background: #b33939; color: white; border: none; padding: 10px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="lock">
-    <h2 style="color: #b33939;">❤️ مساحتنا الخاصة ❤️</h2>
-    <input type="password" id="passInput" style="padding:10px; border-radius:10px; text-align:center;" placeholder="أدخل الرمز (7777)">
-    <br>
+    <h2 style="color: #b33939; margin-bottom: 20px;">❤️ مساحتنا الخاصة ❤️</h2>
+    <input type="password" id="passInput" placeholder="أدخل الرمز السري">
     <button class="btn" onclick="checkPass()">دخول</button>
 </div>
 
@@ -31,22 +31,25 @@
 <div id="chat"></div>
 
 <div id="inputBox" class="input-area">
-    <input type="text" id="msgInput" placeholder="اكتب رسالتك هنا..." onkeypress="if(event.key==='Enter') send()">
+    <input type="text" id="msgInput" placeholder="اكتب رسالتك هنا..." autocomplete="off" onkeypress="if(event.key==='Enter') send()">
     <button class="btn" onclick="send()">إرسال</button>
 </div>
 
 <script>
-const TOKEN = '8489049509:AAE_B6c369VVYzcrmrX1swS4EDlaj0eOVIg';
-const GROUP_ID = '-5153197189'; // المعرف الذي ظهر في صورك للجروب
-const MY_USER_ID = '6837507867'; // رقمك التعريفي الشخصي
-const PASS = "7777";
+// البيانات المستخرجة بدقة من لقطات الشاشة الخاصة بك
+const TOKEN = '8267078872:AAHjsXjRfg7ubWfhurS0GuT1nOYYPX76yI'; // التوكن الجديد
+const GROUP_ID = '-5153197189'; // معرف الجروب الصحيح
+const MY_USER_ID = '6837507867'; // معرفك الشخصي (AbOuD)
+const PASS = "7777"; 
+
+let currentChatHTML = "";
 
 function checkPass() {
     if(document.getElementById('passInput').value === PASS) {
         document.getElementById('lock').style.display = 'none';
         document.getElementById('inputBox').style.display = 'flex';
         updateChat();
-        setInterval(updateChat, 3000); 
+        setInterval(updateChat, 3000); // تحديث تلقائي كل 3 ثواني
     } else { alert("الرمز خطأ!"); }
 }
 
@@ -55,35 +58,42 @@ async function send() {
     const text = input.value.trim();
     if(!text) return;
 
-    // الإرسال للجروب مباشرة
+    // إرسال الرسالة إلى المجموعة مباشرة
     const url = `https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${GROUP_ID}&text=${encodeURIComponent(text)}`;
     input.value = ''; 
 
     try {
         await fetch(url);
-        updateChat(); 
-    } catch(e) { console.error("Error sending"); }
+        updateChat(); // تحديث فوري بعد الإرسال
+    } catch(e) { console.error("فشل الإرسال"); }
 }
 
 async function updateChat() {
     try {
-        // جلب التحديثات
-        const res = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?offset=-20&limit=20`);
+        // جلب التحديثات مع offset=-10 لضمان بقاء الرسائل في الواجهة
+        const res = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?offset=-10&limit=10`);
         const data = await res.json();
         const chatElement = document.getElementById('chat');
         
         if(data.ok && data.result.length > 0) {
-            let html = "";
+            let htmlContent = "";
             data.result.forEach(u => {
+                // عرض الرسائل النصية القادمة من الجروب المحدد فقط
                 if(u.message && u.message.chat.id == GROUP_ID && u.message.text) {
                     const isFromMe = u.message.from.id == MY_USER_ID;
-                    html += `<div class="msg ${isFromMe ? 'sent' : 'rcvd'}">${u.message.text}</div>`;
+                    const msgClass = isFromMe ? 'sent' : 'rcvd';
+                    htmlContent += `<div class="msg ${msgClass}">${u.message.text}</div>`;
                 }
             });
-            chatElement.innerHTML = html;
-            chatElement.scrollTop = chatElement.scrollHeight;
+
+            // تحديث الواجهة فقط في حال وجود رسائل جديدة لمنع الشاشة السوداء
+            if (currentChatHTML !== htmlContent && htmlContent !== "") {
+                chatElement.innerHTML = htmlContent;
+                currentChatHTML = htmlContent;
+                chatElement.scrollTop = chatElement.scrollHeight;
+            }
         }
-    } catch(e) { console.error("Error updating"); }
+    } catch(e) { console.error("خطأ في التحديث"); }
 }
 </script>
 </body>
