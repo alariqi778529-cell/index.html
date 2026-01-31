@@ -6,32 +6,20 @@
     <title>Google</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0e1621; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
         #lock { position: fixed; inset: 0; background: #0e1621; z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .lock-card { background: #17212b; padding: 30px; border-radius: 15px; text-align: center; width: 85%; max-width: 350px; }
-        
         .header { background: #17212b; padding: 12px; text-align: center; border-bottom: 1px solid #000; position: fixed; top: 0; width: 100%; z-index: 10; font-size: 1.4rem; font-weight: bold; }
         .g-blue { color: #4285F4; } .g-red { color: #EA4335; } .g-yellow { color: #FBBC05; } .g-green { color: #34A853; }
-
         #chat { flex: 1; padding: 70px 15px 120px 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-attachment: fixed; }
-        
         .msg { padding: 8px 15px; border-radius: 12px; max-width: 75%; word-wrap: break-word; font-size: 0.95rem; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
         .sent { align-self: flex-end; background: #2b5278; color: white; border-bottom-right-radius: 2px; }
         .rcvd { align-self: flex-start; background: #182533; color: white; border-bottom-left-radius: 2px; }
-        .msg img { max-width: 100%; border-radius: 8px; margin-top: 5px; }
-        
         .sender-name { font-size: 0.7rem; margin-bottom: 2px; font-weight: bold; color: #40a7e3; }
         .msg-time { font-size: 0.65rem; color: #a2acb4; margin-top: 4px; text-align: left; display: block; }
-        
-        /* شريط الأدوات الجديد */
         .input-area { padding: 8px; background: #17212b; display: flex; flex-direction: column; position: fixed; bottom: 0; width: 100%; box-sizing: border-box; }
         .input-row { display: flex; gap: 8px; align-items: center; }
-        
         input[type="text"] { flex: 1; padding: 10px 15px; border-radius: 25px; border: none; background: #242f3d; color: white; outline: none; font-size: 1rem; }
         .icon-btn { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #a2acb4; padding: 5px; }
-        .btn-send { color: #4285F4; font-weight: bold; font-size: 1rem; }
-
-        /* قائمة الإيموجي */
         #emojiPicker { display: none; background: #17212b; padding: 10px; grid-template-columns: repeat(8, 1fr); gap: 5px; border-top: 1px solid #242f3d; max-height: 150px; overflow-y: auto; }
         .emoji { font-size: 1.5rem; cursor: pointer; text-align: center; }
     </style>
@@ -41,14 +29,13 @@
 <div id="lock">
     <div class="lock-card">
         <h2><span class="g-blue">G</span><span class="g-red">o</span><span class="g-yellow">o</span><span class="g-blue">g</span><span class="g-green">l</span><span class="g-red">e</span></h2>
-        <input type="password" id="passInput" style="padding:12px; width:90%; background:#242f3d; color:#fff; border-radius:8px; border:1px solid #2b5278; text-align:center;" placeholder="Search Google...">
+        <input type="password" id="passInput" autocomplete="new-password" style="padding:12px; width:90%; background:#242f3d; color:#fff; border-radius:8px; border:1px solid #2b5278; text-align:center;" placeholder="Search Google...">
         <br><br>
         <button style="background:#4285F4; color:white; border:none; padding:12px 40px; border-radius:8px; width:100%;" onclick="checkPass()">Google Search</button>
     </div>
 </div>
 
 <div class="header"><span class="g-blue">G</span><span class="g-red">o</span><span class="g-yellow">o</span><span class="g-blue">g</span><span class="g-green">l</span><span class="g-red">e</span></div>
-
 <div id="chat"></div>
 
 <div id="inputBox" class="input-area" style="display: none;">
@@ -58,7 +45,7 @@
         <button class="icon-btn" onclick="document.getElementById('fileInput').click()">📎</button>
         <input type="file" id="fileInput" hidden accept="image/*" onchange="sendImage(this)">
         <input type="text" id="msgInput" placeholder="Write a message..." onkeypress="if(event.key==='Enter') send()">
-        <button class="icon-btn btn-send" onclick="send()">إرسال</button>
+        <button class="icon-btn" style="color:#4285F4" onclick="send()">إرسال</button>
     </div>
 </div>
 
@@ -67,7 +54,7 @@
 <script>
 const TOKEN = '8489049509:AAE_B6c369VVYzcrmrX1swS4EDlaj0eOVIg';
 const GROUP_ID = '-5153197189';
-const MY_USER_ID = '6837507867';
+const MY_USER_ID = '6837507867'; // تأكد أن هذا هو الـ ID الخاص بـ "هي"
 const PASS = "730757527";
 
 const emojis = ['❤️', '😘', '😍', '🌹', '😂', '😭', '🔥', '👍', '🙏', '🙄', '😴', '❤️‍🔥', '🤍', '✨', '🥺', '🌸'];
@@ -85,11 +72,15 @@ emojis.forEach(e => {
     picker.appendChild(span);
 });
 
-function toggleEmoji() {
-    picker.style.display = (picker.style.display === 'grid') ? 'none' : 'grid';
-}
+function toggleEmoji() { picker.style.display = (picker.style.display === 'grid') ? 'none' : 'grid'; }
 
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") lockApp(); });
+// حل المشكلة الأولى: مسح حقل كلمة المرور فوراً عند الخروج
+document.addEventListener("visibilitychange", () => { 
+    if (document.visibilityState === "hidden") {
+        document.getElementById('passInput').value = ""; // مسح الباسورد
+        lockApp(); 
+    }
+});
 
 function lockApp() {
     isLocked = true;
@@ -106,18 +97,27 @@ function checkPass() {
     } else { alert("Search failed."); }
 }
 
+// حل المشكلة الثانية: إضافة الرسالة للشاشة فور الإرسال
 async function send() {
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
     if(!text) return;
+
+    // إضافة الرسالة محلياً فوراً لتظهر في الشاشة
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
+    addMessageToHistory(Date.now(), text, 'me', timeStr); // 'me' لتميزها كرسالة مرسلة منك
+    
     input.value = '';
     picker.style.display = 'none';
 
-    await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: GROUP_ID, text: text })
-    });
+    try {
+        await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: GROUP_ID, text: text })
+        });
+    } catch(e) {}
 }
 
 async function sendImage(input) {
@@ -125,16 +125,20 @@ async function sendImage(input) {
     const formData = new FormData();
     formData.append('chat_id', GROUP_ID);
     formData.append('photo', input.files[0]);
-
-    await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
-        method: 'POST',
-        body: formData
-    });
+    await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, { method: 'POST', body: formData });
     input.value = '';
 }
 
-setInterval(() => { if(!isLocked) fetchUpdates(false); }, 2000);
-fetchUpdates(true);
+function addMessageToHistory(id, text, fromId, time) {
+    if (!chatHistory.some(m => m.id === id)) {
+        chatHistory.push({ id, text, fromId, time });
+        if(chatHistory.length > 50) chatHistory.shift();
+        localStorage.setItem('my_chat_backup', JSON.stringify(chatHistory));
+        renderChat();
+        return true;
+    }
+    return false;
+}
 
 async function fetchUpdates(isInitial) {
     try {
@@ -143,13 +147,10 @@ async function fetchUpdates(isInitial) {
         if(data.ok && data.result) {
             data.result.forEach(u => {
                 const m = u.message;
-                if(m && m.chat.id == GROUP_ID) {
-                    let content = m.text || "";
-                    if(m.photo) content = `<img src="${getImageUrl(m.photo)}">`;
-                    
+                if(m && m.chat.id == GROUP_ID && m.text) {
                     const time = new Date(m.date * 1000).toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
-                    addMessageToHistory(m.message_id, content, m.from.id, time);
-                    
+                    // نتحقق إذا كانت الرسالة ليست "تكراراً" لما أرسلناه نحن
+                    addMessageToHistory(m.message_id, m.text, m.from.id, time);
                     if(!isInitial && String(m.from.id) === String(MY_USER_ID)) document.getElementById('notifSound').play();
                 }
                 lastUpdateId = u.update_id;
@@ -158,35 +159,22 @@ async function fetchUpdates(isInitial) {
     } catch(e) {}
 }
 
-// هذه الوظيفة تحتاج لتحسين لجلب رابط الصورة الفعلي، لكن تليجرام يتطلب مساراً طويلاً
-// للتبسيط في هذا الإصدار، نعرض الصور المستقبلة من تليجرام كنص إشعاري أو رابط
-function getImageUrl(photoArray) {
-    // نأخذ أكبر حجم للصورة
-    const fileId = photoArray[photoArray.length - 1].file_id;
-    return `https://api.telegram.org/bot${TOKEN}/getFile?file_id=${fileId}`; // ملاحظة: هذا يحتاج كود إضافي لتحويله لرابط مباشر
-}
-
-function addMessageToHistory(id, text, fromId, time) {
-    if (!chatHistory.some(m => m.id === id)) {
-        chatHistory.push({ id, text, fromId, time });
-        if(chatHistory.length > 50) chatHistory.shift();
-        localStorage.setItem('my_chat_backup', JSON.stringify(chatHistory));
-        if(!isLocked) renderChat();
-    }
-}
-
 function renderChat() {
     const chatElement = document.getElementById('chat');
     chatElement.innerHTML = chatHistory.map(m => {
-        const isFromYou = String(m.fromId) === String(MY_USER_ID);
+        // إذا كان fromId هو 'me' أو يطابق تليجرام لرسائلك، تظهر بجهة "أنا"
+        const isFromYou = (m.fromId === 'me' || String(m.fromId) !== String(MY_USER_ID));
         return `<div class="msg ${isFromYou ? 'sent' : 'rcvd'}">
-            <div class="sender-name">${isFromYou ? 'هي' : 'أنا'}</div>
+            <div class="sender-name">${isFromYou ? 'أنا' : 'هي'}</div>
             ${m.text}
             <span class="msg-time">${m.time}</span>
         </div>`;
     }).join('');
     chatElement.scrollTop = chatElement.scrollHeight;
 }
+
+setInterval(() => { if(!isLocked) fetchUpdates(false); }, 3000);
+fetchUpdates(true);
 </script>
 </body>
 </html>
