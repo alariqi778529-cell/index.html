@@ -3,197 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HACKER_ELITE_TERMINAL_SOUND</title>
+    <title>ALARYQI_SECURE_V7</title>
     <style>
-        body {
-            background-color: #000; color: #0f0; font-family: 'Courier New', monospace;
-            margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh;
-        }
+        body { background-color: #000; color: #0f0; font-family: 'Courier New', monospace; margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; }
         canvas#matrix { position: absolute; top: 0; left: 0; z-index: -2; }
         
-        .globe-container {
-            position: absolute; width: 550px; height: 550px;
-            border-radius: 50%; border: 1px solid rgba(0, 255, 0, 0.2);
-            background: radial-gradient(circle, rgba(0,20,0,0.4) 0%, transparent 75%);
-            box-shadow: inset 0 0 100px rgba(0, 255, 0, 0.1);
-            z-index: -1; opacity: 0.8; animation: rotate 40s linear infinite;
-            display: flex; align-items: center; justify-content: center;
-        }
-        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-        .hacker-box {
-            background: rgba(0, 10, 0, 0.95); padding: 20px; border: 1px solid #0f0;
-            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3); width: 90%; max-width: 420px;
-            text-align: center; border-radius: 8px; position: relative; z-index: 10;
+        /* شاشة القفل */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 100;
         }
 
-        .header { font-size: 14px; color: #0f0; border: 1px dashed #0f0; padding: 5px; margin-bottom: 15px; text-transform: uppercase; }
-        
-        textarea {
-            width: 100%; height: 45px; background: rgba(0,0,0,0.8); border: 1px solid #050;
-            color: #0f0; padding: 10px; box-sizing: border-box; outline: none; margin-bottom: 10px; font-size: 12px;
+        .login-box {
+            border: 2px solid #0f0; padding: 25px; background: rgba(0,15,0,0.9);
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.4); text-align: center;
+            border-radius: 15px; width: 300px;
         }
 
-        #visualizer { width: 100%; height: 50px; background: #000; border: 1px solid #030; margin-bottom: 10px; display: none; }
+        .pass-display {
+            background: #000; border: 1px solid #0f0; color: #0f0;
+            padding: 15px; margin-bottom: 20px; font-size: 24px;
+            letter-spacing: 10px; height: 30px; display: flex; align-items: center; justify-content: center;
+            box-shadow: inset 0 0 10px #0f0;
+        }
 
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .hacker-btn {
+        /* لوحة الأرقام */
+        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .num-btn {
             background: transparent; border: 1px solid #0f0; color: #0f0;
-            padding: 10px; cursor: pointer; font-weight: bold; font-size: 11px;
-            transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;
+            padding: 20px; font-size: 20px; font-weight: bold; cursor: pointer;
+            transition: 0.1s; border-radius: 5px;
         }
-        .hacker-btn:hover { background: rgba(0, 255, 0, 0.2); box-shadow: 0 0 10px #0f0; }
-        .btn-red { border-color: #f00; color: #f00; }
-        .btn-red:hover { background: rgba(255, 0, 0, 0.2); box-shadow: 0 0 10px #f00; }
+        .num-btn:active { background: #0f0; color: #000; box-shadow: 0 0 15px #0f0; }
+        .num-btn.clear { border-color: #f00; color: #f00; }
 
-        #console {
-            background: rgba(0,0,0,0.9); height: 60px; margin-top: 15px; font-size: 10px;
-            text-align: left; padding: 8px; overflow-y: auto; border-top: 1px solid #050; color: #0f0;
-        }
+        /* المحتوى الرئيسي */
+        #main-content { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
+        .hacker-box { background: rgba(0, 10, 0, 0.95); padding: 20px; border: 1px solid #0f0; box-shadow: 0 0 30px #0f0; width: 90%; max-width: 420px; text-align: center; border-radius: 8px; position: relative; }
+        textarea { width: 100%; height: 50px; background: #000; border: 1px solid #050; color: #0f0; padding: 10px; margin-bottom: 10px; outline: none; }
+        #visualizer { width: 100%; height: 50px; background: #000; border: 1px solid #030; margin-bottom: 10px; display: none; }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .hacker-btn { background: transparent; border: 1px solid #0f0; color: #0f0; padding: 12px; cursor: pointer; font-size: 11px; font-weight: bold; }
+        #console { background: #000; height: 60px; margin-top: 15px; font-size: 10px; text-align: left; padding: 8px; border-top: 1px solid #050; }
     </style>
 </head>
 <body>
 
 <canvas id="matrix"></canvas>
-<div class="globe-container"></div>
 
-<div class="hacker-box">
-    <div class="header">> [ EACKER_ELITE_VISUALIZER_V6 ]</div>
-    
-    <textarea id="msgInput" placeholder="> INPUT_DATA_STREAM..." onkeydown="playBeep(400, 0.05)"></textarea>
-    
-    <canvas id="visualizer"></canvas>
-    
-    <div class="btn-grid">
-        <button class="hacker-btn" onclick="playBeep(900, 0.1); sendText()">⚡ EXECUTE_DATA_SEND</button>
-        <button class="hacker-btn" onclick="playBeep(900, 0.1); sendVoice()">📡 UPLOAD_VOICE ONLY</button>
-        <button id="recBtn" class="hacker-btn" onclick="playBeep(1200, 0.1); startRec()">🎙️ REC_ON</button>
-        <button id="stopBtn" class="hacker-btn btn-red" style="display:none;" onclick="playBeep(600, 0.2); stopRec()">STOP</button>
-        <button class="hacker-btn btn-red" onclick="playBeep(200, 0.3); alert('DELETING_DATA...')">🚨 UPLOAD_VOICE ONLY</button>
+<div id="login-overlay">
+    <div class="login-box">
+        <div style="margin-bottom: 15px; font-size: 12px; letter-spacing: 2px;">SECURITY_ENCRYPTION_V7</div>
+        <div class="pass-display" id="display"></div>
+        <div class="numpad">
+            <button class="num-btn" onclick="tap(1)">1</button>
+            <button class="num-btn" onclick="tap(2)">2</button>
+            <button class="num-btn" onclick="tap(3)">3</button>
+            <button class="num-btn" onclick="tap(4)">4</button>
+            <button class="num-btn" onclick="tap(5)">5</button>
+            <button class="num-btn" onclick="tap(6)">6</button>
+            <button class="num-btn" onclick="tap(7)">7</button>
+            <button class="num-btn" onclick="tap(8)">8</button>
+            <button class="num-btn" onclick="tap(9)">9</button>
+            <button class="num-btn clear" onclick="clearPass()">C</button>
+            <button class="num-btn" onclick="tap(0)">0</button>
+            <button class="num-btn" style="border-color: #0ff; color: #0ff;" onclick="checkPass()">OK</button>
+        </div>
+        <div id="status-msg" style="margin-top: 15px; font-size: 10px; height: 10px;"></div>
     </div>
-    
-    <div id="console">ID:_CONSOLE:<br>> CORE_ONLINE_...SFA STT....></div>
+</div>
+
+<div id="main-content">
+    <div class="hacker-box">
+        <div style="font-size: 14px; border: 1px dashed #0f0; padding: 5px; margin-bottom: 15px;">> [ ALARYQI_ELITE_INTERFACE ]</div>
+        <textarea id="msgInput" placeholder="> INPUT_DATA..."></textarea>
+        <canvas id="visualizer"></canvas>
+        <div class="btn-grid">
+            <button class="hacker-btn" onclick="sendText()">⚡ EXECUTE_SEND</button>
+            <button class="hacker-btn" onclick="sendVoice()">📡 UPLOAD_VOICE</button>
+            <button id="recBtn" class="hacker-btn" onclick="startRec()">🎙️ REC_ON</button>
+            <button id="stopBtn" class="hacker-btn" style="display:none; color:red; border-color:red;" onclick="stopRec()">STOP</button>
+            <button class="hacker-btn" style="color:red; border-color:red;" onclick="location.reload()">🔒 LOCK</button>
+        </div>
+        <div id="console">> SYSTEM_READY...</div>
+    </div>
 </div>
 
 <script>
 const TOKEN = "8579983010:AAFKblFfzbNYk0bXOY6afuSZg3cIu35nobI";
 const CHAT_ID = "6837507867";
+const CORRECT_PASS = "2005"; 
+let currentInput = "";
 
-// نظام الصوت المطور
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-function playBeep(frequency = 800, duration = 0.1) {
+function playSound(freq, type, dur) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    
-    osc.type = "square"; // صوت إلكتروني حاد (هكر)
-    osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-    
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
     gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-    
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    
-    osc.start();
-    osc.stop(audioCtx.currentTime + duration);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + dur);
 }
 
-// 1. الماتريكس
+function tap(num) {
+    if (currentInput.length < 6) {
+        currentInput += num;
+        document.getElementById('display').innerText = "*".repeat(currentInput.length);
+        playSound(800, "square", 0.05); // صوت ضغطة رقم
+    }
+}
+
+function clearPass() {
+    currentInput = "";
+    document.getElementById('display').innerText = "";
+    playSound(300, "sawtooth", 0.1);
+}
+
+function checkPass() {
+    if (currentInput === CORRECT_PASS) {
+        playSound(1200, "sine", 0.2);
+        setTimeout(() => playSound(1500, "sine", 0.3), 100); // صوت نجاح مزدوج
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('main-content').style.display = 'flex';
+    } else {
+        playSound(100, "sawtooth", 0.5); // صوت خطأ غليظ
+        document.getElementById('status-msg').innerText = "ACCESS_DENIED";
+        document.getElementById('status-msg').style.color = "red";
+        setTimeout(() => { document.getElementById('status-msg').innerText = ""; }, 2000);
+        clearPass();
+    }
+}
+
+// Matrix Background
 const canvas = document.getElementById('matrix');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-const columns = Math.floor(canvas.width / 20);
-const drops = Array(columns).fill(1);
-
+const drops = Array(Math.floor(canvas.width / 20)).fill(1);
 function drawMatrix() {
     ctx.fillStyle = "rgba(0, 0, 0, 0.1)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
     for (let i = 0; i < drops.length; i++) {
-        ctx.fillStyle = Math.random() > 0.85 ? "#f00" : "#0f0";
-        ctx.font = "16px monospace";
-        const chars = ["0", "1", "$", "#", "@", "%", "&", "!", "?"];
-        const text = chars[Math.floor(Math.random() * chars.length)];
-        ctx.fillText(text, i * 20, drops[i] * 20);
+        ctx.fillStyle = Math.random() > 0.9 ? "#f00" : "#0f0";
+        ctx.fillText(Math.random() > 0.5 ? "0" : "1", i * 20, drops[i] * 20);
         if (drops[i] * 20 > canvas.height && Math.random() > 0.975) drops[i] = 0;
         drops[i]++;
     }
 }
 setInterval(drawMatrix, 50);
 
-// 2. الصوت ومحلل الترددات
-let mediaRecorder, audioChunks = [], analyser, dataArray, animationId;
-const vCanvas = document.getElementById('visualizer');
-const vCtx = vCanvas.getContext('2d');
-
+// Logic (Voice & Text) - مختصرة للعمل
+let mediaRecorder, audioChunks = [];
 async function startRec() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    vCanvas.style.display = "block";
-    analyser = audioCtx.createAnalyser();
-    const source = audioCtx.createMediaStreamSource(stream);
-    source.connect(analyser);
-    analyser.fftSize = 64;
-    dataArray = new Uint8Array(analyser.frequencyBinCount);
-    
     mediaRecorder = new MediaRecorder(stream);
     audioChunks = [];
     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
     mediaRecorder.start();
-    
     document.getElementById('recBtn').style.display = 'none';
     document.getElementById('stopBtn').style.display = 'block';
-    log("LISTENING_TO_FREQUENCY...");
-    drawVisualizer();
 }
-
-function drawVisualizer() {
-    animationId = requestAnimationFrame(drawVisualizer);
-    analyser.getByteFrequencyData(dataArray);
-    vCtx.fillStyle = "#000"; vCtx.fillRect(0, 0, vCanvas.width, vCanvas.height);
-    const barWidth = (vCanvas.width / dataArray.length) * 2;
-    let x = 0;
-    dataArray.forEach(val => {
-        vCtx.fillStyle = "#0f0";
-        vCtx.fillRect(x, vCanvas.height - val/2, barWidth - 2, val/2);
-        x += barWidth;
-    });
-}
-
 function stopRec() {
-    if(mediaRecorder) mediaRecorder.stop();
-    cancelAnimationFrame(animationId);
+    mediaRecorder.stop();
     document.getElementById('recBtn').style.display = 'block';
     document.getElementById('stopBtn').style.display = 'none';
-    log("BUFFER_ENCRYPTED.");
 }
-
 async function sendText() {
     const txt = document.getElementById('msgInput').value;
     if(!txt) return;
-    log("TRANSMITTING_TEXT...");
     await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
         method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({chat_id: CHAT_ID, text: "💀 DATA: " + txt})
+        body: JSON.stringify({chat_id: CHAT_ID, text: "💀 ALARYQI: " + txt})
     });
-    log("SEND_SUCCESS.");
+    document.getElementById('msgInput').value = "";
 }
-
 async function sendVoice() {
     if(audioChunks.length === 0) return;
-    log("TRANSMITTING_VOICE...");
     const audioBlob = new Blob(audioChunks, { type: 'audio/ogg' });
     const fd = new FormData();
     fd.append('chat_id', CHAT_ID);
     fd.append('voice', audioBlob, 'v.ogg');
     await fetch(`https://api.telegram.org/bot${TOKEN}/sendVoice`, { method: 'POST', body: fd });
-    log("VOICE_SENT.");
-}
-
-function log(msg) {
-    const c = document.getElementById('console');
-    c.innerHTML += `<br>> ${msg}`;
-    c.scrollTop = c.scrollHeight;
 }
 </script>
 </body>
