@@ -3,45 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>مساحتنا ❤️</title>
+    <title>Google</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0e1621; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; }
         #lock { position: fixed; inset: 0; background: #0e1621; z-index: 9999; display: flex; align-items: center; justify-content: center; }
         .lock-card { background: #17212b; padding: 30px; border-radius: 15px; text-align: center; width: 80%; }
-        .header { background: #17212b; padding: 12px; text-align: center; font-weight: bold; border-bottom: 1px solid #000; position: fixed; top: 0; width: 100%; z-index: 10; }
+        
+        /* تصميم شعار جوجل في الهيدر */
+        .header { background: #17212b; padding: 12px; text-align: center; border-bottom: 1px solid #000; position: fixed; top: 0; width: 100%; z-index: 10; font-size: 1.4rem; font-weight: bold; letter-spacing: -1px; }
+        .g-blue { color: #4285F4; } .g-red { color: #EA4335; } .g-yellow { color: #FBBC05; } .g-green { color: #34A853; }
+
         #chat { flex: 1; padding: 70px 15px 85px 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-attachment: fixed; }
-        .msg { padding: 8px 15px; border-radius: 12px; max-width: 75%; word-wrap: break-word; font-size: 0.95rem; line-height: 1.4; position: relative; }
+        .msg { padding: 8px 15px; border-radius: 12px; max-width: 75%; word-wrap: break-word; font-size: 0.95rem; line-height: 1.4; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
         .sent { align-self: flex-end; background: #2b5278; color: white; border-bottom-right-radius: 2px; }
         .rcvd { align-self: flex-start; background: #182533; color: white; border-bottom-left-radius: 2px; }
         .sender-name { font-size: 0.7rem; margin-bottom: 2px; font-weight: bold; color: #40a7e3; }
         .msg-time { font-size: 0.65rem; color: #a2acb4; margin-top: 4px; text-align: left; display: block; }
-        .typing-indicator { font-size: 0.8rem; color: #40a7e3; padding: 5px 20px; font-style: italic; display: none; }
         .input-area { padding: 10px; background: #17212b; display: flex; gap: 10px; align-items: center; position: fixed; bottom: 0; width: 100%; box-sizing: border-box; }
         input[type="text"] { flex: 1; padding: 12px 18px; border-radius: 25px; border: none; background: #242f3d; color: white; outline: none; }
-        .btn-send { background: none; border: none; color: #40a7e3; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .btn-send { background: none; border: none; color: #4285F4; font-weight: bold; cursor: pointer; font-size: 1rem; }
     </style>
 </head>
 <body>
 
-<div id="lock">
+<div id="lock" onclick="enableAudio()">
     <div class="lock-card">
-        <h3 style="color:#40a7e3;">❤️ كلمة السر ❤️</h3>
-        <input type="password" id="passInput" style="padding:12px; border-radius:8px; width:90%; background:#242f3d; color:#fff; border:1px solid #2b5278;">
-        <br><br><br>
-        <button style="background:#40a7e3; color:white; border:none; padding:12px 40px; border-radius:8px; width:100%;" onclick="checkPass()">دخول</button>
+        <h2 style="margin-bottom:20px;">
+            <span class="g-blue">G</span><span class="g-red">o</span><span class="g-yellow">o</span><span class="g-blue">g</span><span class="g-green">l</span><span class="g-red">e</span>
+        </h2>
+        <input type="password" id="passInput" style="padding:12px; border-radius:8px; width:90%; background:#242f3d; color:#fff; border:1px solid #2b5278;" placeholder="Search...">
+        <br><br>
+        <button style="background:#4285F4; color:white; border:none; padding:12px 40px; border-radius:8px; width:100%;" onclick="checkPass()">Google Search</button>
     </div>
 </div>
 
-<div class="header">مساحة الحب ❤️</div>
+<div class="header">
+    <span class="g-blue">G</span><span class="g-red">o</span><span class="g-yellow">o</span><span class="g-blue">g</span><span class="g-green">l</span><span class="g-red">e</span>
+</div>
+
 <div id="chat"></div>
-<div id="typing" class="typing-indicator">هي تكتب الآن...</div>
 
 <div id="inputBox" class="input-area" style="display: none;">
-    <input type="text" id="msgInput" placeholder="اكتب رسالتك..." onkeypress="if(event.key==='Enter') send()">
+    <input type="text" id="msgInput" placeholder="Write a message..." onkeypress="if(event.key==='Enter') send()">
     <button class="btn-send" onclick="send()">إرسال</button>
 </div>
 
-<audio id="notifSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
+<audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
 
 <script>
 const TOKEN = '8489049509:AAE_B6c369VVYzcrmrX1swS4EDlaj0eOVIg';
@@ -52,6 +59,12 @@ const PASS = "730757527";
 let chatHistory = JSON.parse(localStorage.getItem('my_chat_backup')) || [];
 let lastUpdateId = 0;
 
+function enableAudio() {
+    // تفعيل الصوت عند أول لمسة للشاشة
+    const audio = document.getElementById('notifSound');
+    audio.play().then(() => { audio.pause(); audio.currentTime = 0; }).catch(() => {});
+}
+
 function checkPass() {
     if(document.getElementById('passInput').value === PASS) {
         document.getElementById('lock').style.display = 'none';
@@ -59,7 +72,7 @@ function checkPass() {
         renderChat(); 
         fetchUpdates(true);
         setInterval(() => fetchUpdates(false), 2000); 
-    } else { alert("الرمز غير صحيح!"); }
+    } else { alert("Error: Connection failed."); }
 }
 
 async function fetchUpdates(isInitial) {
@@ -69,16 +82,15 @@ async function fetchUpdates(isInitial) {
         const data = await res.json();
         if(data.ok && data.result) {
             data.result.forEach(u => {
-                // ميزة جاري الكتابة
-                if(u.typing && u.typing.user_id == MY_USER_ID) {
-                    showTyping();
-                }
-                
                 if(u.message && u.message.chat.id == GROUP_ID && u.message.text) {
-                    const time = new Date(u.message.date * 1000).toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
-                    addMessageToHistory(u.message.message_id, u.message.text, u.message.from.id, time);
-                    if(!isInitial && String(u.message.from.id) === String(MY_USER_ID)) {
-                        document.getElementById('notifSound').play();
+                    const msgDate = u.message.date ? new Date(u.message.date * 1000) : new Date();
+                    const timeStr = msgDate.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
+                    
+                    const isNew = addMessageToHistory(u.message.message_id, u.message.text, u.message.from.id, timeStr);
+                    
+                    // تشغيل الصوت إذا كانت الرسالة من الطرف الآخر (هي) وليست عند التحميل الأول
+                    if(!isInitial && isNew && String(u.message.from.id) === String(MY_USER_ID)) {
+                        document.getElementById('notifSound').play().catch(e => console.log("Audio play blocked"));
                     }
                 }
                 lastUpdateId = u.update_id;
@@ -87,19 +99,13 @@ async function fetchUpdates(isInitial) {
     } catch(e) {}
 }
 
-function showTyping() {
-    const el = document.getElementById('typing');
-    el.style.display = 'block';
-    setTimeout(() => { el.style.display = 'none'; }, 3000);
-}
-
 async function send() {
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
     if(!text) return;
 
-    const time = new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
-    addMessageToHistory(Date.now(), text, 'temp_user', time);
+    const timeStr = new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
+    addMessageToHistory(Date.now(), text, 'temp_user', timeStr);
     input.value = '';
 
     try {
@@ -112,12 +118,14 @@ async function send() {
 }
 
 function addMessageToHistory(id, text, fromId, time) {
-    if (!chatHistory.some(m => m.id === id || (m.text === text && m.fromId === fromId && m.id > Date.now() - 5000))) {
-        chatHistory.push({ id, text, fromId, time });
+    if (!chatHistory.some(m => m.id === id || (m.text === text && m.fromId === fromId && Math.abs(m.id - Date.now()) < 5000))) {
+        chatHistory.push({ id, text, fromId, time: time || "الآن" });
         if(chatHistory.length > 50) chatHistory.shift();
         localStorage.setItem('my_chat_backup', JSON.stringify(chatHistory));
         renderChat();
+        return true;
     }
+    return false;
 }
 
 function renderChat() {
