@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hacker Emergency System</title>
+    <title>HACKER_SYSTEM_GLOBAL</title>
     <style>
-        /* خلفية الماتريكس المتحركة */
         body {
             background-color: black;
-            color: #00ff00;
+            color: #0f0;
             font-family: 'Courier New', monospace;
             margin: 0;
             overflow: hidden;
@@ -17,177 +16,136 @@
             justify-content: center;
             height: 100vh;
         }
-        canvas {
+        canvas { position: absolute; top: 0; left: 0; z-index: -1; }
+        
+        /* تأثير الكرة الأرضية في الخلفية */
+        .globe-bg {
             position: absolute;
-            top: 0;
-            left: 0;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 255, 0, 0.2);
+            box-shadow: inset 0 0 50px rgba(0, 255, 0, 0.2);
             z-index: -1;
+            opacity: 0.5;
+            animation: rotateGlobe 20s linear infinite;
         }
+        @keyframes rotateGlobe {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
         .container {
-            background: rgba(0, 20, 0, 0.85);
+            background: rgba(0, 10, 0, 0.9);
             padding: 25px;
-            border: 2px solid #00ff00;
-            box-shadow: 0 0 20px #00ff00;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 400px;
+            border: 1px solid #0f0;
+            box-shadow: 0 0 30px #0f0;
+            width: 85%;
+            max-width: 380px;
             text-align: center;
-            position: relative;
         }
-        h1 { font-size: 22px; text-shadow: 0 0 10px #00ff00; }
         textarea {
-            width: 100%;
-            height: 80px;
-            background: black;
-            border: 1px solid #00ff00;
-            color: #00ff00;
-            padding: 10px;
-            box-sizing: border-box;
-            outline: none;
-            margin-bottom: 10px;
+            width: 100%; height: 60px; background: #000; border: 1px solid #0f0;
+            color: #0f0; padding: 10px; box-sizing: border-box; outline: none; margin: 10px 0;
         }
         .btn {
-            width: 100%;
-            padding: 15px;
-            margin-top: 10px;
-            background: black;
-            border: 1px solid #00ff00;
-            color: #00ff00;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
+            width: 100%; padding: 12px; margin: 5px 0; background: transparent;
+            border: 1px solid #0f0; color: #0f0; cursor: pointer; font-weight: bold;
         }
-        .btn:hover { background: #00ff00; color: black; }
-        .btn:disabled { border-color: #004400; color: #004400; }
-        .recording { border-color: red !important; color: red !important; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.5; } }
-        #status { margin-top: 15px; font-weight: bold; }
-        .success-led {
-            display: inline-block;
-            width: 15px;
-            height: 15px;
-            background-color: #004400;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-        .led-on { background-color: #00ff00; box-shadow: 0 0 15px #00ff00; }
+        .btn:hover { background: #0f0; color: #000; }
+        .rec-active { background: #500 !important; color: white !important; border-color: red; }
+        #status { margin-top: 10px; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <canvas id="matrix"></canvas>
-
-<div class="container">
-    <h1>[ SYSTEM_OVERRIDE ]</h1>
-    <textarea id="msgInput" placeholder="> ENTER_TEXT_HERE..."></textarea>
+<div class="globe-bg"></div> <div class="container">
+    <h2 style="letter-spacing: 3px;">[ GLOBAL_HACK_V3 ]</h2>
+    <textarea id="msgInput" placeholder="> TYPE_DATA..."></textarea>
     
-    <button id="recBtn" class="btn" onclick="startRec()">🎤 START_RECORDING</button>
-    <button id="stopBtn" class="btn" onclick="stopRec()" style="display:none;">⏹ STOP_AND_SAVE</button>
+    <button id="recBtn" class="btn" onclick="startRec()">🎤 RECORD_AUDIO</button>
+    <button id="stopBtn" class="btn" onclick="stopRec()" style="display:none;">⏹ STOP_STREAM</button>
     
-    <button id="sendBtn" class="btn" onclick="sendData()" style="border-width: 2px; margin-top: 20px;">[ EXECUTE_SEND ]</button>
+    <button id="sendBtn" class="btn" onclick="sendAll()" style="border-width:2px; color:#fff; border-color:#fff;">[ TRANSMIT_VIA_SATELLITE ]</button>
     
-    <div id="status">
-        <span id="led" class="success-led"></span>
-        <span id="statText">STANDING BY...</span>
-    </div>
+    <div id="status">READY_TO_CONNECT...</div>
 </div>
 
 <script>
 const TOKEN = "8579983010:AAFKblFfzbNYk0bXOY6afuSZg3cIu35nobI";
 const CHAT_ID = "6837507867";
 
-let mediaRecorder;
-let audioChunks = [];
-let audioBlob = null;
-
-// 1. كود خلفية الماتريكس
+// 1. خلفية الماتريكس
 const canvas = document.getElementById('matrix');
 const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-const letters = "01010101010101010101010101010101";
-const fontSize = 16;
-const columns = canvas.width / fontSize;
-const drops = Array(Math.floor(columns)).fill(1);
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+const lines = Array(Math.floor(canvas.width / 15)).fill(0);
 
 function drawMatrix() {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#0F0";
-    ctx.font = fontSize + "px arial";
-    for (let i = 0; i < drops.length; i++) {
-        const text = letters.charAt(Math.floor(Math.random() * letters.length));
-        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-        drops[i]++;
-    }
+    ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "#0f0"; ctx.font = "15px monospace";
+    lines.forEach((y, i) => {
+        const text = String.fromCharCode(Math.random() * 128);
+        ctx.fillText(text, i * 15, y);
+        lines[i] = y > canvas.height || y > Math.random() * 10000 ? 0 : y + 15;
+    });
 }
-setInterval(drawMatrix, 33);
+setInterval(drawMatrix, 50);
 
-// 2. كود تسجيل الصوت
+// 2. معالجة الصوت (تم إصلاح جودة الصوت هنا)
+let mediaRecorder; let audioChunks = [];
+
 async function startRec() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = () => {
-            audioBlob = new Blob(audioChunks, { type: 'audio/ogg' });
-            updateStatus("VOICE_READY", "cyan");
-        };
-        mediaRecorder.start();
-        document.getElementById('recBtn').style.display = 'none';
-        document.getElementById('stopBtn').style.display = 'block';
-        document.getElementById('stopBtn').classList.add('recording');
-        updateStatus("RECORDING...", "red");
-    } catch (e) { updateStatus("MIC_ERROR", "red"); }
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // تحديد صيغة تليجرام المفضلة
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' }); 
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => { if(e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.start();
+    document.getElementById('recBtn').style.display='none';
+    document.getElementById('stopBtn').style.display='block';
+    document.getElementById('stopBtn').classList.add('rec-active');
+    document.getElementById('status').innerText = "RECORDING_AUDIO_STREAM...";
 }
 
 function stopRec() {
     mediaRecorder.stop();
-    document.getElementById('recBtn').style.display = 'block';
-    document.getElementById('stopBtn').style.display = 'none';
+    document.getElementById('recBtn').style.display='block';
+    document.getElementById('stopBtn').style.display='none';
+    document.getElementById('status').innerText = "AUDIO_BUFFERED_READY.";
 }
 
-function updateStatus(txt, color) {
-    const sText = document.getElementById('statText');
-    const led = document.getElementById('led');
-    sText.innerText = txt;
-    sText.style.color = color;
-    if(txt.includes("SUCCESS")) led.classList.add('led-on');
-    else led.classList.remove('led-on');
-}
-
-// 3. كود الإرسال
-async function sendData() {
+// 3. الإرسال الكامل
+async function sendAll() {
     const btn = document.getElementById('sendBtn');
-    const note = document.getElementById('msgInput').value;
+    const msg = document.getElementById('msgInput').value;
     btn.disabled = true;
-    updateStatus("SENDING...", "yellow");
+    document.getElementById('status').innerText = "UPLOADING_TO_SERVER...";
 
     try {
         // إرسال النص
-        if(note.trim() !== "") {
+        if(msg) {
             await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: CHAT_ID, text: "📝 رسالة هكر جديدة:\n" + note })
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({chat_id: CHAT_ID, text: "💀 Hacker Msg: " + msg})
             });
         }
 
-        // إرسال الصوت
-        if (audioBlob) {
+        // إرسال الصوت (تحويله لملف صحيح)
+        if(audioChunks.length > 0) {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/ogg' });
             const fd = new FormData();
             fd.append('chat_id', CHAT_ID);
             fd.append('voice', audioBlob, 'voice.ogg');
             await fetch(`https://api.telegram.org/bot${TOKEN}/sendVoice`, { method: 'POST', body: fd });
         }
 
-        updateStatus("SUCCESS_SENT", "#00ff00");
+        document.getElementById('status').innerText = "SUCCESS: DATA_LEAKED!";
+        document.getElementById('status').style.color = "white";
         document.getElementById('msgInput').value = "";
-        audioBlob = null;
-    } catch (err) {
-        updateStatus("SEND_FAILED", "red");
+    } catch(e) {
+        document.getElementById('status').innerText = "ERROR_IN_TRANSMISSION";
     }
     btn.disabled = false;
 }
