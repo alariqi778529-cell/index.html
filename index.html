@@ -7,9 +7,9 @@
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0a0a0a; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         #lock { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .header { background: #b33939; padding: 15px; text-align: center; font-weight: bold; border-bottom: 2px solid #222; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .header { background: #b33939; padding: 15px; text-align: center; font-weight: bold; border-bottom: 2px solid #222; }
         #chat { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #0e0e0e; }
-        .msg { padding: 10px 18px; border-radius: 20px; max-width: 80%; word-wrap: break-word; font-size: 1rem; line-height: 1.5; animation: fadeIn 0.3s ease; position: relative; }
+        .msg { padding: 10px 18px; border-radius: 20px; max-width: 80%; word-wrap: break-word; font-size: 1rem; line-height: 1.5; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .sent { align-self: flex-end; background: #b33939; color: white; border-bottom-right-radius: 4px; }
         .rcvd { align-self: flex-start; background: #2c2c2c; color: #eee; border-bottom-left-radius: 4px; }
@@ -22,7 +22,7 @@
 
 <div id="lock">
     <h2 style="color: #b33939; margin-bottom: 20px;">❤️ مساحتنا الخاصة ❤️</h2>
-    <input type="password" id="passInput" style="padding:10px; border-radius:10px; text-align:center; border:1px solid #b33939; background:#000; color:#fff;" placeholder="أدخل الرمز (7777)">
+    <input type="password" id="passInput" style="padding:10px; border-radius:10px; text-align:center; background:#111; color:#fff; border:1px solid #b33939;" placeholder="أدخل الرمز (7777)">
     <br>
     <button class="btn" onclick="checkPass()">دخول</button>
 </div>
@@ -36,20 +36,20 @@
 </div>
 
 <script>
-// البيانات المؤكدة من لقطات الشاشة الخاصة بك
+// البيانات المستخرجة من صورك بدقة
 const TOKEN = '8489049509:AAE_B6c369VVYzcrmrX1swS4EDlaj0eOVIg';
 const GROUP_ID = '-5153197189';
 const MY_USER_ID = '6837507867';
 const PASS = "7777";
 
-// استرجاع الرسائل المحفوظة في ذاكرة المتصفح عند الفتح
-let allMessages = JSON.parse(localStorage.getItem('chat_history')) || [];
+// استعادة التاريخ من ذاكرة المتصفح لمنع الاختفاء
+let chatHistory = JSON.parse(localStorage.getItem('my_chat_data')) || [];
 
 function checkPass() {
     if(document.getElementById('passInput').value === PASS) {
         document.getElementById('lock').style.display = 'none';
         document.getElementById('inputBox').style.display = 'flex';
-        renderMessages(); // عرض الرسائل القديمة فوراً
+        renderMessages(); // عرض المحفوظات فوراً
         updateChat();
         setInterval(updateChat, 3000); 
     } else { alert("الرمز خطأ!"); }
@@ -60,46 +60,44 @@ async function send() {
     const text = input.value.trim();
     if(!text) return;
 
-    const url = `https://api.telegram.org/bot${TOKEN}/sendMessage`;
+    // الإرسال بطريقة POST لضمان الاستقرار
     try {
-        const response = await fetch(url, {
+        await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: GROUP_ID, text: text })
         });
-        if(response.ok) {
-            input.value = ''; 
-            updateChat(); 
-        }
-    } catch(e) { console.error("Send error"); }
+        input.value = ''; 
+        updateChat(); 
+    } catch(e) { console.error("Error sending"); }
 }
 
 async function updateChat() {
     try {
-        // جلب آخر 20 تحديث
+        // جلب التحديثات
         const res = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?offset=-20&limit=20`);
         const data = await res.json();
         
         if(data.ok && data.result.length > 0) {
-            let hasNew = false;
+            let isNewFound = false;
             data.result.forEach(u => {
                 if(u.message && u.message.chat.id == GROUP_ID && u.message.text) {
-                    const msgId = u.message.message_id;
-                    // إضافة الرسالة فقط إذا لم تكن موجودة في الذاكرة
-                    if (!allMessages.some(m => m.id === msgId)) {
-                        allMessages.push({
-                            id: msgId,
+                    const mId = u.message.message_id;
+                    // إضافة الرسالة فقط إذا لم تكن مسجلة مسبقاً
+                    if (!chatHistory.some(m => m.id === mId)) {
+                        chatHistory.push({
+                            id: mId,
                             text: u.message.text,
-                            fromId: u.message.from.id
+                            from: u.message.from.id
                         });
-                        hasNew = true;
+                        isNewFound = true;
                     }
                 }
             });
 
-            if (hasNew) {
-                // حفظ الرسائل في ذاكرة المتصفح الدائمة
-                localStorage.setItem('chat_history', JSON.stringify(allMessages));
+            if (isNewFound) {
+                // حفظ في ذاكرة الهاتف
+                localStorage.setItem('my_chat_data', JSON.stringify(chatHistory));
                 renderMessages();
             }
         }
@@ -107,14 +105,14 @@ async function updateChat() {
 }
 
 function renderMessages() {
-    const chatElement = document.getElementById('chat');
+    const chat = document.getElementById('chat');
     let html = "";
-    allMessages.forEach(m => {
-        const isMe = m.fromId == MY_USER_ID;
+    chatHistory.forEach(m => {
+        const isMe = m.from == MY_USER_ID;
         html += `<div class="msg ${isMe ? 'sent' : 'rcvd'}">${m.text}</div>`;
     });
-    chatElement.innerHTML = html;
-    chatElement.scrollTop = chatElement.scrollHeight;
+    chat.innerHTML = html;
+    chat.scrollTop = chat.scrollHeight;
 }
 </script>
 </body>
