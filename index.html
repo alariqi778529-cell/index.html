@@ -5,23 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مساحتنا الخاصة ❤️</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0a0a0a; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         #lock { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .header { background: #b33939; padding: 15px; text-align: center; font-weight: bold; border-bottom: 2px solid #222; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .header { background: #b33939; padding: 15px; text-align: center; font-weight: bold; border-bottom: 2px solid #222; }
         #chat { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #0e0e0e; }
-        
-        /* تصميم الرسائل */
         .msg { padding: 10px 18px; border-radius: 20px; max-width: 80%; word-wrap: break-word; font-size: 1rem; line-height: 1.5; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* رسائلك (اليمين) */
         .sent { align-self: flex-end; background: #b33939; color: white; border-bottom-right-radius: 4px; }
-        /* رسائلها (اليسار) */
         .rcvd { align-self: flex-start; background: #2c2c2c; color: #eee; border-bottom-left-radius: 4px; }
-        
         .input-area { padding: 15px; background: #111; display: none; gap: 10px; border-top: 1px solid #333; }
         input[type="text"] { flex: 1; padding: 12px 20px; border-radius: 30px; border: none; background: #222; color: white; outline: none; }
-        input[type="password"] { padding: 12px; border-radius: 12px; border: 1px solid #b33939; background: #111; color: white; text-align: center; margin-bottom: 15px; }
+        input[type="password"] { padding: 10px; border-radius: 10px; border: 1px solid #b33939; background: #000; color: #fff; text-align: center; margin-bottom: 10px; }
         .btn { background: #b33939; color: white; border: none; padding: 10px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
@@ -29,7 +23,7 @@
 
 <div id="lock">
     <h2 style="color: #b33939;">❤️ مساحتنا الخاصة ❤️</h2>
-    <input type="password" id="passInput" placeholder="أدخل الرمز السري">
+    <input type="password" id="passInput" placeholder="الرمز السري (7777)">
     <button class="btn" onclick="checkPass()">دخول</button>
 </div>
 
@@ -42,13 +36,13 @@
 </div>
 
 <script>
-// البيانات المستخرجة من صورك
-const TOKEN = '8489049509:AAE_B6c369VVYzcrmrX1swS4EDlaj0eOVIg';
+// البيانات من صورك (التوكن الجديد)
+const TOKEN = '8267078872:AAHjsXjRfg7ubWfhurS0GuT1nOYYPX76yI'; 
 const GROUP_ID = '-5153197189'; 
 const MY_USER_ID = '6837507867'; 
 const PASS = "7777";
 
-let lastMessages = ""; 
+let lastMessagesHTML = "";
 
 function checkPass() {
     if(document.getElementById('passInput').value === PASS) {
@@ -70,13 +64,13 @@ async function send() {
     try {
         await fetch(url);
         updateChat(); 
-    } catch(e) { console.error("Send error"); }
+    } catch(e) { console.error("Error sending"); }
 }
 
 async function updateChat() {
     try {
-        // جلب آخر 20 رسالة من المجموعة
-        const res = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?offset=-20&limit=20`);
+        // نستخدم offset=-10 لجلب آخر الرسائل حتى لو كانت قديمة
+        const res = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?offset=-10&limit=10`);
         const data = await res.json();
         const chatElement = document.getElementById('chat');
         
@@ -90,13 +84,13 @@ async function updateChat() {
                 }
             });
 
-            if (lastMessages !== currentHTML) {
+            if (lastMessagesHTML !== currentHTML) {
                 chatElement.innerHTML = currentHTML;
-                lastMessages = currentHTML;
+                lastMessagesHTML = currentHTML;
                 chatElement.scrollTop = chatElement.scrollHeight;
             }
         }
-    } catch(e) { console.error("Update error"); }
+    } catch(e) { console.error("Error updating"); }
 }
 </script>
 </body>
