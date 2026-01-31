@@ -12,13 +12,13 @@
         #chat { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-attachment: fixed; }
         .msg { padding: 8px 15px; border-radius: 12px; max-width: 75%; word-wrap: break-word; font-size: 0.95rem; line-height: 1.4; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.2); animation: fadeIn 0.2s ease; }
         
-        /* رسائلك أنت (من تليجرام) تظهر لها على اليمين */
+        /* رسائلك أنت (من تليجرام) تظهر لها على اليمين بلون أزرق */
         .sent { align-self: flex-end; background: #2b5278; color: white; border-bottom-right-radius: 2px; }
-        /* رسائلها هي (من الموقع) تظهر على اليسار */
+        /* رسائلها هي (من الموقع) تظهر لها على اليسار بلون غامق */
         .rcvd { align-self: flex-start; background: #182533; color: white; border-bottom-left-radius: 2px; }
         
         .sender-name { font-size: 0.75rem; margin-bottom: 3px; font-weight: bold; color: #40a7e3; }
-        .input-area { padding: 10px; background: #17212b; display: none; gap: 10px; align-items: center; }
+        .input-area { padding: 10px; background: #17212b; display: flex; gap: 10px; align-items: center; visibility: hidden; }
         input[type="text"] { flex: 1; padding: 10px 15px; border-radius: 20px; border: none; background: #242f3d; color: white; outline: none; }
         .btn-send { background: none; border: none; color: #40a7e3; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -46,7 +46,7 @@
 <script>
 const TOKEN = '8489049509:AAE_B6c369VVYzcrmrX1swS4EDlaj0eOVIg';
 const GROUP_ID = '-5153197189';
-const MY_USER_ID = '6837507867'; // معرفك أنت في تليجرام
+const MY_USER_ID = '6837507867'; // هويتك في تليجرام
 const PASS = "730757527";
 
 let chatHistory = JSON.parse(localStorage.getItem('my_chat_backup')) || [];
@@ -55,21 +55,20 @@ let lastUpdateId = 0;
 function checkPass() {
     if(document.getElementById('passInput').value === PASS) {
         document.getElementById('lock').style.display = 'none';
-        document.getElementById('inputBox').style.display = 'flex';
+        document.getElementById('inputBox').style.visibility = 'visible';
         renderChat(); 
-        // جلب آخر 30 رسالة عند الدخول مباشرة
         fetchInitialMessages();
-        setInterval(updateChat, 2000); 
+        // تقليل زمن التحديث إلى 1.5 ثانية لسرعة أكبر
+        setInterval(updateChat, 1500); 
     } else { alert("الرمز غير صحيح!"); }
 }
 
 async function fetchInitialMessages() {
     try {
-        // جلب آخر 30 رسالة من تليجرام
         const res = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?limit=30&offset=-30`);
         const data = await res.json();
         if(data.ok) processUpdates(data.result);
-    } catch(e) { console.error("Initial fetch error"); }
+    } catch(e) { console.error("Error"); }
 }
 
 async function updateChat() {
@@ -86,6 +85,7 @@ function processUpdates(updates) {
         updates.forEach(u => {
             if(u.message && u.message.chat.id == GROUP_ID && u.message.text) {
                 const senderName = u.message.from.first_name || "مجهول";
+                // إضافة الرسالة للتاريخ مع تحديد المصدر
                 addMessageToHistory(u.message.message_id, u.message.text, u.message.from.id, senderName);
             }
             lastUpdateId = u.update_id;
@@ -95,23 +95,24 @@ function processUpdates(updates) {
 
 async function send() {
     const input = document.getElementById('msgInput');
-    if(!input.value.trim()) return;
+    const text = input.value.trim();
+    if(!text) return;
+
+    // لا نمسح النص ولا نضيفه يدوياً، ننتظر تليجرام ليعيده لنا في الـ Update القادم لضمان عدم الاختفاء
     try {
         await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: GROUP_ID, text: input.value.trim() })
+            body: JSON.stringify({ chat_id: GROUP_ID, text: text })
         });
         input.value = ''; 
-        updateChat();
-    } catch(e) { console.error("Send error"); }
+    } catch(e) { alert("فشل الإرسال!"); }
 }
 
 function addMessageToHistory(id, text, fromId, name) {
     if (!chatHistory.some(m => m.id === id)) {
         chatHistory.push({ id, text, fromId, name });
-        // الاحتفاظ بآخر 50 رسالة فقط في ذاكرة المتصفح لضمان الخفة
-        if(chatHistory.length > 50) chatHistory.shift();
+        if(chatHistory.length > 60) chatHistory.shift();
         localStorage.setItem('my_chat_backup', JSON.stringify(chatHistory));
         renderChat();
     }
@@ -120,13 +121,14 @@ function addMessageToHistory(id, text, fromId, name) {
 function renderChat() {
     const chatElement = document.getElementById('chat');
     chatElement.innerHTML = chatHistory.map(m => {
-        // إذا كان الـ ID هو ID الخاص بك (تليجرام) -> تظهر يمين (sent)
-        // غير ذلك (رسائلها من الموقع) -> تظهر يسار (rcvd)
-        const isFromTelegramMe = String(m.fromId) === String(MY_USER_ID);
-        const msgClass = isFromTelegramMe ? 'sent' : 'rcvd';
+        // إذا كان المرسل هو أنت (من تليجرام)، يظهر لها على اليمين "حبيبي"
+        const isFromYou = String(m.fromId) === String(MY_USER_ID);
+        const msgClass = isFromYou ? 'sent' : 'rcvd';
+        const displayName = isFromYou ? 'حبيبي' : 'أنا';
+        
         return `
             <div class="msg ${msgClass}">
-                <div class="sender-name">${isFromTelegramMe ? 'أنا' : m.name}</div>
+                <div class="sender-name">${displayName}</div>
                 ${m.text}
             </div>`;
     }).join('');
