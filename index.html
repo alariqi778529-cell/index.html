@@ -1,1 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام بلاغات الطوارئ</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #2d2d2d;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h1 { color: #ff4d4d; margin-bottom: 20px; }
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background-color: #3d3d3d;
+            color: white;
+            resize: none;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 8px;
+            background-color: #ff4d4d;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover { background-color: #cc0000; transform: scale(1.02); }
+        #status { margin-top: 15px; font-size: 14px; }
+    </style>
+</head>
+<body>
 
+    <div class="container">
+        <h1>🚨 طوارئ</h1>
+        <p>اكتب رسالتك وسيتم إرسالها فوراً للمختصين</p>
+        
+        <textarea id="messageInput" placeholder="اكتب تفاصيل الحالة هنا..."></textarea>
+        
+        <button onclick="sendEmergency()">إرسال الاستغاثة الآن</button>
+        
+        <div id="status"></div>
+    </div>
+
+    <script>
+        async function sendEmergency() {
+            const token = "8579983010:AAFKblFfzbNYk0bXOY6afuSZg3cIu35nobI";
+            const chatId = "6837507867";
+            const messageText = document.getElementById('messageInput').value;
+            const statusDiv = document.getElementById('status');
+
+            if (!messageText.trim()) {
+                alert("الرجاء كتابة تفاصيل البلاغ!");
+                return;
+            }
+
+            statusDiv.innerText = "جاري الإرسال...";
+            statusDiv.style.color = "yellow";
+
+            const url = `https://api.telegram.org/bot${token}/sendMessage`;
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: `⚠️ بلاغ طوارئ جديد:\n\n${messageText}`
+                    })
+                });
+
+                if (response.ok) {
+                    statusDiv.innerText = "✅ تم الإرسال بنجاح!";
+                    statusDiv.style.color = "#4CAF50";
+                    document.getElementById('messageInput').value = ""; // مسح النص بعد الإرسال
+                } else {
+                    statusDiv.innerText = "❌ فشل الإرسال، حاول مجدداً.";
+                    statusDiv.style.color = "#ff4d4d";
+                }
+            } catch (error) {
+                statusDiv.innerText = "❌ خطأ في الاتصال بالشبكة.";
+                statusDiv.style.color = "#ff4d4d";
+            }
+        }
+    </script>
+
+</body>
+</html>
