@@ -3,151 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HACKER_SYSTEM_GLOBAL</title>
+    <title>HACKER_TERMINAL_SOUND_V5</title>
     <style>
         body {
-            background-color: black;
-            color: #0f0;
-            font-family: 'Courier New', monospace;
-            margin: 0;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
+            background-color: #000; color: #0f0; font-family: 'Courier New', monospace;
+            margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh;
         }
-        canvas { position: absolute; top: 0; left: 0; z-index: -1; }
+        canvas { position: absolute; top: 0; left: 0; z-index: -1; opacity: 0.6; }
         
-        /* تأثير الكرة الأرضية في الخلفية */
-        .globe-bg {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            border: 1px solid rgba(0, 255, 0, 0.2);
-            box-shadow: inset 0 0 50px rgba(0, 255, 0, 0.2);
-            z-index: -1;
-            opacity: 0.5;
-            animation: rotateGlobe 20s linear infinite;
-        }
-        @keyframes rotateGlobe {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        .radar {
+            position: absolute; width: 350px; height: 350px; border-radius: 50%;
+            border: 1px solid rgba(0, 255, 0, 0.1); z-index: -1;
+            background: repeating-radial-gradient(circle, transparent, transparent 40px, rgba(0, 255, 0, 0.05) 41px);
         }
 
-        .container {
-            background: rgba(0, 10, 0, 0.9);
-            padding: 25px;
-            border: 1px solid #0f0;
-            box-shadow: 0 0 30px #0f0;
-            width: 85%;
-            max-width: 380px;
-            text-align: center;
+        .hacker-box {
+            background: rgba(0, 15, 0, 0.95); padding: 25px; border: 1px solid #0f0;
+            box-shadow: 0 0 40px rgba(0, 255, 0, 0.4); width: 85%; max-width: 400px;
+            text-align: center; border-radius: 5px; position: relative;
         }
+
+        .header { font-size: 18px; letter-spacing: 4px; border-bottom: 1px solid #0f0; padding-bottom: 10px; margin-bottom: 15px; }
+        
         textarea {
-            width: 100%; height: 60px; background: #000; border: 1px solid #0f0;
-            color: #0f0; padding: 10px; box-sizing: border-box; outline: none; margin: 10px 0;
+            width: 100%; height: 60px; background: #000; border: 1px solid #050;
+            color: #0f0; padding: 10px; box-sizing: border-box; outline: none; margin-bottom: 10px;
         }
-        .btn {
-            width: 100%; padding: 12px; margin: 5px 0; background: transparent;
-            border: 1px solid #0f0; color: #0f0; cursor: pointer; font-weight: bold;
+
+        .btn-group { display: flex; flex-direction: column; gap: 8px; }
+        
+        .hacker-btn {
+            background: transparent; border: 1px solid #0f0; color: #0f0;
+            padding: 12px; cursor: pointer; font-weight: bold; position: relative;
+            overflow: hidden; text-transform: uppercase; font-size: 13px;
         }
-        .btn:hover { background: #0f0; color: #000; }
-        .rec-active { background: #500 !important; color: white !important; border-color: red; }
-        #status { margin-top: 10px; font-size: 12px; }
+        .hacker-btn:hover { background: #0f0; color: #000; box-shadow: 0 0 15px #0f0; }
+        .hacker-btn:active { transform: scale(0.98); }
+        
+        .rec-pulse { border-color: #f00 !important; color: #f00 !important; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0px #f00; } 50% { box-shadow: 0 0 15px #f00; } 100% { box-shadow: 0 0 0px #f00; } }
+
+        #console {
+            background: #000; height: 80px; margin-top: 15px; font-size: 11px;
+            text-align: left; padding: 8px; overflow-y: auto; border: 1px solid #020; color: #0a0;
+        }
     </style>
 </head>
 <body>
 
 <canvas id="matrix"></canvas>
-<div class="globe-bg"></div> <div class="container">
-    <h2 style="letter-spacing: 3px;">[ GLOBAL_HACK_V3 ]</h2>
-    <textarea id="msgInput" placeholder="> TYPE_DATA..."></textarea>
+<div class="radar"></div>
+
+<div class="hacker-box">
+    <div class="header">ELITE_OVERRIDE_V5</div>
     
-    <button id="recBtn" class="btn" onclick="startRec()">🎤 RECORD_AUDIO</button>
-    <button id="stopBtn" class="btn" onclick="stopRec()" style="display:none;">⏹ STOP_STREAM</button>
+    <textarea id="msgInput" placeholder="> AWATING_COMMAND..."></textarea>
     
-    <button id="sendBtn" class="btn" onclick="sendAll()" style="border-width:2px; color:#fff; border-color:#fff;">[ TRANSMIT_VIA_SATELLITE ]</button>
+    <div class="btn-group">
+        <button class="hacker-btn" onclick="playBeep(); sendTextOnly()">[ 📤 EXECUTE_TEXT_SEND ]</button>
+        
+        <div style="display:flex; gap: 5px;">
+            <button id="recBtn" class="hacker-btn" style="flex:2;" onclick="playBeep(); startRec()">🎙️ REC_AUDIO</button>
+            <button id="stopBtn" class="hacker-btn" style="flex:2; display:none;" onclick="playBeep(); stopRec()">⏹️ STOP</button>
+            <button id="sendVoiceBtn" class="hacker-btn" style="flex:3;" onclick="playBeep(); sendVoiceOnly()">[ 🛰️ SEND_VOICE ]</button>
+        </div>
+    </div>
     
-    <div id="status">READY_TO_CONNECT...</div>
+    <div id="console">> SYSTEM_ONLINE...<br>> AUDIO_DRIVERS_LOADED.</div>
 </div>
 
 <script>
 const TOKEN = "8579983010:AAFKblFfzbNYk0bXOY6afuSZg3cIu35nobI";
 const CHAT_ID = "6837507867";
 
-// 1. خلفية الماتريكس
+// نظام أصوات الهكر (Beep)
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playBeep(freq = 800, duration = 0.1) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "square";
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+}
+
+// تأثير الماتريكس
 const canvas = document.getElementById('matrix');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-const lines = Array(Math.floor(canvas.width / 15)).fill(0);
+const columns = Math.floor(canvas.width / 20);
+const drops = Array(columns).fill(1);
 
 function drawMatrix() {
-    ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = "#0f0"; ctx.font = "15px monospace";
-    lines.forEach((y, i) => {
-        const text = String.fromCharCode(Math.random() * 128);
-        ctx.fillText(text, i * 15, y);
-        lines[i] = y > canvas.height || y > Math.random() * 10000 ? 0 : y + 15;
+    ctx.fillStyle = "rgba(0, 0, 0, 0.1)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#0F0"; ctx.font = "15px monospace";
+    drops.forEach((y, i) => {
+        const text = Math.random() > 0.5 ? "0" : "1";
+        ctx.fillText(text, i * 20, y * 20);
+        if (y * 20 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
     });
 }
 setInterval(drawMatrix, 50);
 
-// 2. معالجة الصوت (تم إصلاح جودة الصوت هنا)
+function log(msg) {
+    const consoleDiv = document.getElementById('console');
+    consoleDiv.innerHTML += `<br>> ${msg}`;
+    consoleDiv.scrollTop = consoleDiv.scrollHeight;
+}
+
+// برمجة الصوت
 let mediaRecorder; let audioChunks = [];
 
 async function startRec() {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    // تحديد صيغة تليجرام المفضلة
-    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' }); 
-    audioChunks = [];
-    mediaRecorder.ondataavailable = e => { if(e.data.size > 0) audioChunks.push(e.data); };
-    mediaRecorder.start();
-    document.getElementById('recBtn').style.display='none';
-    document.getElementById('stopBtn').style.display='block';
-    document.getElementById('stopBtn').classList.add('rec-active');
-    document.getElementById('status').innerText = "RECORDING_AUDIO_STREAM...";
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.start();
+        document.getElementById('recBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'block';
+        document.getElementById('stopBtn').classList.add('rec-pulse');
+        log("RECORDING_DATA...");
+    } catch(e) { log("ACCESS_DENIED"); }
 }
 
 function stopRec() {
     mediaRecorder.stop();
-    document.getElementById('recBtn').style.display='block';
-    document.getElementById('stopBtn').style.display='none';
-    document.getElementById('status').innerText = "AUDIO_BUFFERED_READY.";
+    document.getElementById('recBtn').style.display = 'block';
+    document.getElementById('stopBtn').style.display = 'none';
+    log("STREAM_READY.");
 }
 
-// 3. الإرسال الكامل
-async function sendAll() {
-    const btn = document.getElementById('sendBtn');
-    const msg = document.getElementById('msgInput').value;
-    btn.disabled = true;
-    document.getElementById('status').innerText = "UPLOADING_TO_SERVER...";
-
+async function sendTextOnly() {
+    const txt = document.getElementById('msgInput').value;
+    if(!txt) return;
+    log("UPLOADING_TEXT...");
     try {
-        // إرسال النص
-        if(msg) {
-            await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({chat_id: CHAT_ID, text: "💀 Hacker Msg: " + msg})
-            });
-        }
-
-        // إرسال الصوت (تحويله لملف صحيح)
-        if(audioChunks.length > 0) {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/ogg' });
-            const fd = new FormData();
-            fd.append('chat_id', CHAT_ID);
-            fd.append('voice', audioBlob, 'voice.ogg');
-            await fetch(`https://api.telegram.org/bot${TOKEN}/sendVoice`, { method: 'POST', body: fd });
-        }
-
-        document.getElementById('status').innerText = "SUCCESS: DATA_LEAKED!";
-        document.getElementById('status').style.color = "white";
+        await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({chat_id: CHAT_ID, text: "💀 HACK_DATA:\n" + txt})
+        });
+        log("TEXT_SENT.");
         document.getElementById('msgInput').value = "";
-    } catch(e) {
-        document.getElementById('status').innerText = "ERROR_IN_TRANSMISSION";
-    }
-    btn.disabled = false;
+    } catch(e) { log("FAILED."); }
+}
+
+async function sendVoiceOnly() {
+    if(audioChunks.length === 0) return;
+    log("UPLOADING_VOICE...");
+    try {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/ogg' });
+        const fd = new FormData();
+        fd.append('chat_id', CHAT_ID);
+        fd.append('voice', audioBlob, 'voice.ogg');
+        await fetch(`https://api.telegram.org/bot${TOKEN}/sendVoice`, { method: 'POST', body: fd });
+        log("VOICE_SENT.");
+        audioChunks = [];
+    } catch(e) { log("FAILED."); }
 }
 </script>
 </body>
