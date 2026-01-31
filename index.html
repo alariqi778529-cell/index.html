@@ -3,34 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALARYQI_ELITE_FINAL</title>
+    <title>ALARYQI_ELITE_OS</title>
     <style>
         body { background-color: #000; color: #0f0; font-family: 'Courier New', monospace; margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; }
         canvas#matrix { position: absolute; top: 0; left: 0; z-index: -2; }
         
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
-        .login-box { border: 2px solid #0f0; padding: 25px; background: rgba(0,15,0,0.9); box-shadow: 0 0 25px #0f0; text-align: center; border-radius: 15px; width: 280px; }
+        /* قفل الشاشة */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 100; }
+        .login-box { border: 2px solid #0f0; padding: 25px; background: rgba(0,15,0,0.9); box-shadow: 0 0 25px #0f0; text-align: center; border-radius: 15px; width: 280px; position: relative; }
+        
+        /* زر الإغلاق */
+        .close-btn { position: absolute; top: 10px; right: 15px; color: #f00; cursor: pointer; font-size: 20px; font-weight: bold; border: none; background: none; }
+
         .pass-display { background: #000; border: 1px solid #0f0; color: #0f0; padding: 15px; margin-bottom: 20px; font-size: 24px; letter-spacing: 10px; height: 30px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 10px #0f0; }
         .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .num-btn { background: transparent; border: 1px solid #0f0; color: #0f0; padding: 15px; font-size: 18px; cursor: pointer; border-radius: 5px; }
         .num-btn:active { background: #0f0; color: #000; }
 
+        /* المحتوى الرئيسي */
         #main-content { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; z-index: 10; }
-        .hacker-box { background: rgba(0, 10, 0, 0.95); padding: 20px; border: 1px solid #0f0; box-shadow: 0 0 30px #0f0; width: 90%; max-width: 400px; text-align: center; border-radius: 8px; }
+        .hacker-box { background: rgba(0, 10, 0, 0.95); padding: 20px; border: 1px solid #0f0; box-shadow: 0 0 30px #0f0; width: 90%; max-width: 400px; text-align: center; border-radius: 8px; position: relative; }
         textarea { width: 100%; height: 50px; background: #000; border: 1px solid #050; color: #0f0; padding: 10px; margin-bottom: 10px; outline: none; resize: none; }
         #visualizer { width: 100%; height: 60px; background: #000; border: 1px solid #0f0; margin-bottom: 10px; display: none; }
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .hacker-btn { background: transparent; border: 1px solid #0f0; color: #0f0; padding: 12px; cursor: pointer; font-size: 11px; font-weight: bold; }
         #console { background: #000; height: 70px; margin-top: 15px; font-size: 10px; text-align: left; padding: 8px; border: 1px solid #050; overflow-y: auto; color: #0f0; }
+
+        /* رسالة الترحيب الوميضية */
+        #welcome-msg { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #0f0; font-size: 30px; text-shadow: 0 0 20px #0f0; z-index: 200; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
 
 <canvas id="matrix"></canvas>
 
+<div id="welcome-msg">WELCOME ALARYQI<br>SYSTEM_ACCESS_GRANTED</div>
+
 <div id="login-overlay">
     <div class="login-box">
-        <div style="margin-bottom: 15px; font-size: 10px; color: #0f0;">[ ALARYQI_SECURITY_CORE ]</div>
+        <button class="close-btn" onclick="location.reload()">×</button>
+        <div style="margin-bottom: 15px; font-size: 10px; color: #0f0;">[ ALARYQI_SECURITY_OS ]</div>
         <div class="pass-display" id="display"></div>
         <div class="numpad">
             <button class="num-btn" onclick="tap(1)">1</button><button class="num-btn" onclick="tap(2)">2</button><button class="num-btn" onclick="tap(3)">3</button>
@@ -44,7 +56,8 @@
 
 <div id="main-content">
     <div class="hacker-box">
-        <div style="font-size: 12px; margin-bottom: 10px;">> ELITE_OVERRIDE_V7_ACTIVE</div>
+        <button class="close-btn" onclick="location.reload()" style="top: 5px; right: 10px;">×</button>
+        <div style="font-size: 12px; margin-bottom: 10px;">> ELITE_OVERRIDE_V8_ACTIVE</div>
         <textarea id="msgInput" placeholder="...AWAITING_COMMAND" oninput="playKeySound()"></textarea>
         <canvas id="visualizer"></canvas>
         <div class="btn-grid">
@@ -61,22 +74,28 @@
 const TOKEN = "8579983010:AAFKblFfzbNYk0bXOY6afuSZg3cIu35nobI";
 const CHAT_ID = "6837507867";
 const CORRECT_PASS = "2005"; 
-let currentInput = "";
-let audioCtx, mediaRecorder, audioChunks = [], analyser, dataArray, animationId;
+let currentInput = "", audioCtx, mediaRecorder, audioChunks = [], animationId;
 
-// وظيفة تشغيل الصوت المحسنة
 function playBeep(freq, type, dur, vol = 0.1) {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
     gain.gain.setValueAtTime(vol, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
     osc.connect(gain); gain.connect(audioCtx.destination);
     osc.start(); osc.stop(audioCtx.currentTime + dur);
+}
+
+// وظيفة الترحيب الصوتي بالرجل الآلي
+function speakWelcome() {
+    const msg = new SpeechSynthesisUtterance();
+    msg.text = "Welcome Alaryqi, System Access Granted. Ready for commands.";
+    msg.lang = 'en-US';
+    msg.rate = 0.8; // سرعة الصوت لجعله يبدو كالرجل الآلي
+    msg.pitch = 0.5; // درجة الصوت
+    window.speechSynthesis.speak(msg);
 }
 
 function tap(num) {
@@ -87,18 +106,21 @@ function tap(num) {
     }
 }
 
-function clearPass() {
-    currentInput = ""; document.getElementById('display').innerText = "";
-    playBeep(200, "sawtooth", 0.1);
-}
+function clearPass() { currentInput = ""; document.getElementById('display').innerText = ""; playBeep(200, "sawtooth", 0.1); }
 
 function checkPass() {
     if (currentInput === CORRECT_PASS) {
         playBeep(1000, "sine", 0.2);
-        setTimeout(() => playBeep(1400, "sine", 0.3), 150);
         document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('main-content').style.display = 'flex';
-        log("ACCESS_GRANTED. WELCOME ALARYQI.");
+        document.getElementById('welcome-msg').style.display = 'block';
+        
+        // تشغيل صوت الترحيب
+        speakWelcome();
+
+        setTimeout(() => {
+            document.getElementById('welcome-msg').style.display = 'none';
+            document.getElementById('main-content').style.display = 'flex';
+        }, 3000);
     } else {
         playBeep(120, "sawtooth", 0.6, 0.2);
         clearPass();
@@ -107,14 +129,13 @@ function checkPass() {
 
 function playKeySound() { playBeep(600, "sine", 0.03, 0.05); }
 
-// نظام الماتريكس
+// Matrix
 const canvas = document.getElementById('matrix');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 const drops = Array(Math.floor(canvas.width / 20)).fill(1);
 function drawMatrix() {
     ctx.fillStyle = "rgba(0,0,0,0.1)"; ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.font = "15px monospace";
     drops.forEach((y, i) => {
         ctx.fillStyle = Math.random() > 0.9 ? "#f00" : "#0f0";
         ctx.fillText(Math.random() > 0.5 ? "1" : "0", i * 20, y * 20);
@@ -124,80 +145,47 @@ function drawMatrix() {
 }
 setInterval(drawMatrix, 50);
 
-// التسجيل والصوت
+// Recording Functions (كما في السابق)
 async function startRec() {
-    playBeep(900, "sine", 0.1);
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    
-    // تشغيل الـ Visualizer
-    const vCanvas = document.getElementById('visualizer');
-    vCanvas.style.display = "block";
+    const vCanvas = document.getElementById('visualizer'); vCanvas.style.display = "block";
     const vCtx = vCanvas.getContext('2d');
     if(!audioCtx) audioCtx = new AudioContext();
-    analyser = audioCtx.createAnalyser();
+    const analyser = audioCtx.createAnalyser();
     const source = audioCtx.createMediaStreamSource(stream);
-    source.connect(analyser);
-    analyser.fftSize = 64;
-    dataArray = new Uint8Array(analyser.frequencyBinCount);
-
+    source.connect(analyser); analyser.fftSize = 64;
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
     function draw() {
-        animationId = requestAnimationFrame(draw);
-        analyser.getByteFrequencyData(dataArray);
+        animationId = requestAnimationFrame(draw); analyser.getByteFrequencyData(dataArray);
         vCtx.fillStyle = "#000"; vCtx.fillRect(0,0,vCanvas.width,vCanvas.height);
-        dataArray.forEach((v, i) => {
-            vCtx.fillStyle = "#0f0";
-            vCtx.fillRect(i*12, vCanvas.height - v/2, 10, v/2);
-        });
+        dataArray.forEach((v, i) => { vCtx.fillStyle = "#0f0"; vCtx.fillRect(i*12, vCanvas.height - v/2, 10, v/2); });
     }
     draw();
-
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream); audioChunks = [];
     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
     mediaRecorder.start();
-    document.getElementById('recBtn').style.display = 'none';
-    document.getElementById('stopBtn').style.display = 'block';
-    log("...LISTENING_TO_FREQUENCY");
+    document.getElementById('recBtn').style.display = 'none'; document.getElementById('stopBtn').style.display = 'block';
 }
 
 function stopRec() {
-    playBeep(400, "sine", 0.2);
-    mediaRecorder.stop();
-    cancelAnimationFrame(animationId);
-    document.getElementById('recBtn').style.display = 'block';
-    document.getElementById('stopBtn').style.display = 'none';
-    log(".BUFFER_ENCRYPTED");
+    mediaRecorder.stop(); cancelAnimationFrame(animationId);
+    document.getElementById('recBtn').style.display = 'block'; document.getElementById('stopBtn').style.display = 'none';
 }
 
 async function sendText() {
-    const txt = document.getElementById('msgInput').value;
-    if(!txt) return;
-    playBeep(1100, "square", 0.1);
-    log("...TRANSMITTING_TEXT");
+    const txt = document.getElementById('msgInput').value; if(!txt) return;
     await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
         method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({chat_id: CHAT_ID, text: "💀 DATA: " + txt})
+        body: JSON.stringify({chat_id: CHAT_ID, text: "💀 ALARYQI: " + txt})
     });
     document.getElementById('msgInput').value = "";
-    log(".SEND_SUCCESS");
 }
 
 async function sendVoice() {
     if(audioChunks.length === 0) return;
-    playBeep(1100, "square", 0.1);
-    log("...TRANSMITTING_VOICE");
     const audioBlob = new Blob(audioChunks, { type: 'audio/ogg' });
-    const fd = new FormData();
-    fd.append('chat_id', CHAT_ID);
-    fd.append('voice', audioBlob, 'v.ogg');
+    const fd = new FormData(); fd.append('chat_id', CHAT_ID); fd.append('voice', audioBlob, 'v.ogg');
     await fetch(`https://api.telegram.org/bot${TOKEN}/sendVoice`, { method: 'POST', body: fd });
-    log(".VOICE_SENT");
-}
-
-function log(m) {
-    const c = document.getElementById('console');
-    c.innerHTML += `<br>> ${m}`;
-    c.scrollTop = c.scrollHeight;
 }
 </script>
 </body>
