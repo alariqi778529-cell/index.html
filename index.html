@@ -5,53 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مساحتنا الخاصة ❤️</title>
     <style>
-        body { font-family: sans-serif; background: #0a0a0a; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        /* شاشة القفل */
+        body { font-family: sans-serif; background: #0a0a0a; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; }
         #lock { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .header { background: #b33939; padding: 15px; text-align: center; font-weight: bold; border-bottom: 2px solid #222; }
-        #chat { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background-image: radial-gradient(#1a1a1a 1px, transparent 1px); background-size: 20px 20px; }
-        .msg { padding: 12px; border-radius: 15px; max-width: 75%; font-size: 0.95rem; line-height: 1.4; position: relative; word-wrap: break-word; }
+        #chat { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #0e0e0e; }
+        .msg { padding: 10px 15px; border-radius: 15px; max-width: 75%; word-wrap: break-word; font-size: 0.95rem; line-height: 1.4; }
         .sent { align-self: flex-end; background: #b33939; color: white; border-bottom-right-radius: 2px; }
         .rcvd { align-self: flex-start; background: #2c2c2c; color: #ddd; border-bottom-left-radius: 2px; }
         .input-area { padding: 15px; background: #111; display: none; gap: 8px; border-top: 1px solid #333; }
         input { flex: 1; padding: 12px; border-radius: 25px; border: none; background: #222; color: white; outline: none; text-align: center; }
         .btn { background: #b33939; color: white; border: none; padding: 0 20px; border-radius: 25px; cursor: pointer; font-weight: bold; }
-        .lock-input { max-width: 200px; margin-bottom: 15px; border: 1px solid #b33939; }
     </style>
 </head>
 <body>
 
 <div id="lock">
     <h2 style="color: #b33939;">❤️ مساحتنا الخاصة ❤️</h2>
-    <p>أدخل الرمز السري للدخول</p>
-    <input type="password" id="passInput" class="lock-input" placeholder="****">
-    <button class="btn" style="height: 45px;" onclick="checkPass()">دخول</button>
+    <input type="password" id="passInput" style="padding:10px; border-radius:10px; border:1px solid #b33939; text-align:center;" placeholder="أدخل الرمز (7777)">
+    <br>
+    <button class="btn" style="height:40px;" onclick="checkPass()">دخول</button>
 </div>
 
-<div class="header">❤️ أنتِ وهي ❤️</div>
+<div class="header">❤️ مساحة الحب ❤️</div>
 <div id="chat"></div>
 
 <div id="inputBox" class="input-area">
-    <input type="text" id="msgInput" placeholder="اكتب رسالة حب..." autocomplete="off">
+    <input type="text" id="msgInput" placeholder="اكتب رسالتك هنا..." autocomplete="off">
     <button class="btn" onclick="send()">إرسال</button>
 </div>
 
 <script>
 const TOKEN = '8489049509:AAE_B6c369VVYzcrmrX1swS4EDlaj0eOVIg';
 const CHAT_ID = '6837507867';
-const CORRECT_PASS = "7777";
+const PASS = "7777";
 
-// دالة التحقق من كلمة المرور
 function checkPass() {
-    const val = document.getElementById('passInput').value;
-    if(val === CORRECT_PASS) {
+    if(document.getElementById('passInput').value === PASS) {
         document.getElementById('lock').style.display = 'none';
         document.getElementById('inputBox').style.display = 'flex';
-        loadMessages();
-        setInterval(loadMessages, 4000); // تحديث كل 4 ثوانٍ
-    } else {
-        alert("الرمز غير صحيح يا بطل!");
-    }
+        updateChat();
+        setInterval(updateChat, 3000); // تحديث كل 3 ثوانٍ
+    } else { alert("الرمز خطأ!"); }
 }
 
 async function send() {
@@ -59,43 +53,41 @@ async function send() {
     const text = input.value.trim();
     if(!text) return;
 
-    input.value = ''; // مسح الشريط فوراً
-    
-    // الإرسال بطريقة GET لضمان التوافق مع كروم
+    // إرسال الرسالة للبوت
     const url = `https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(text)}`;
-    
+    input.value = ''; 
+
     try {
         await fetch(url);
-        loadMessages(); // تحديث الدردشة بعد الإرسال
-    } catch(e) { console.error("Error sending"); }
+        updateChat(); // تحديث فوري بعد الإرسال
+    } catch(e) { console.error("Send failed"); }
 }
 
-async function loadMessages() {
+async function updateChat() {
     try {
-        const res = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?offset=-20`);
+        // جلب التحديثات من تليجرام (آخر 30 رسالة)
+        const res = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?limit=30&offset=-30`);
         const data = await res.json();
         const chat = document.getElementById('chat');
         
-        if(data.result) {
-            chat.innerHTML = '';
-            data.result.forEach(item => {
-                if(item.message && item.message.text) {
-                    const isMine = item.message.from.id == CHAT_ID; // تحديد إذا كنت أنت المرسل من تليجرام
+        if(data.result && data.result.length > 0) {
+            chat.innerHTML = ''; // تنظيف الشاشة قبل إعادة العرض
+            data.result.forEach(u => {
+                if(u.message && u.message.text) {
                     const div = document.createElement('div');
-                    div.className = 'msg ' + (isMine ? 'sent' : 'rcvd');
-                    div.innerText = item.message.text;
+                    // تمييز رسائلك عن رسائلها (إذا كانت هي ترسل مباشرة للبوت)
+                    const isFromMe = u.message.from.id == CHAT_ID;
+                    div.className = 'msg ' + (isFromMe ? 'sent' : 'rcvd');
+                    div.innerText = u.message.text;
                     chat.appendChild(div);
                 }
             });
-            chat.scrollTop = chat.scrollHeight;
+            chat.scrollTop = chat.scrollHeight; // النزول لآخر رسالة
         }
-    } catch(e) { console.error("Error loading"); }
+    } catch(e) { console.error("Fetch failed"); }
 }
 
-// إرسال عند ضغط Enter
-document.getElementById('msgInput').addEventListener('keypress', (e) => {
-    if(e.key === 'Enter') send();
-});
+document.getElementById('msgInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') send(); });
 </script>
 </body>
 </html>
