@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBER_RADAR_V1</title>
+    <style>
+        body { background-color: #000; color: #0f0; font-family: 'Courier New', monospace; margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        
+        /* الرادار الدائري */
+        .radar-container { position: relative; width: 300px; height: 300px; border: 2px solid #050; border-radius: 50%; box-shadow: 0 0 20px #030; }
+        .radar-sweep { position: absolute; width: 50%; height: 50%; top: 0; left: 50%; background: linear-gradient(45deg, rgba(0,255,0,0.4) 0%, transparent 100%); transform-origin: bottom left; animation: sweep 4s linear infinite; border-left: 2px solid #0f0; }
+        
+        @keyframes sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* دوائر داخلية */
+        .circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 1px solid #030; border-radius: 50%; }
+        .c1 { width: 100px; height: 100px; }
+        .c2 { width: 200px; height: 200px; }
+
+        /* شاشات البيانات */
+        .data-panel { position: absolute; background: rgba(0,20,0,0.8); border: 1px solid #0f0; padding: 10px; font-size: 10px; box-shadow: 0 0 10px #0f0; }
+        #left-panel { top: 20px; left: 20px; width: 150px; }
+        #right-panel { top: 20px; right: 20px; width: 150px; }
+        #bottom-panel { bottom: 20px; width: 80%; text-align: center; border-color: #f00; color: #f00; font-weight: bold; }
+
+        /* نقاط تومض (أهداف) */
+        .target { position: absolute; width: 4px; height: 4px; background: #f00; border-radius: 50%; box-shadow: 0 0 10px #f00; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+<div class="radar-container">
+    <div class="radar-sweep"></div>
+    <div class="circle c1"></div>
+    <div class="circle c2"></div>
+    <div class="target" style="top: 30%; left: 70%;"></div>
+    <div class="target" style="top: 60%; left: 20%;"></div>
+</div>
+
+<div id="left-panel" class="data-panel">
+    > SYSTEM: ACTIVE<br>
+    > SCANNING...<br>
+    > IP: <span id="ip">LOADING...</span><br>
+    > LOC: <span id="loc">SEARCHING...</span>
+</div>
+
+<div id="right-panel" class="data-panel">
+    > LAT: <span id="lat">00.000</span><br>
+    > LON: <span id="lon">00.000</span><br>
+    > TRACE: ACTIVE
+</div>
+
+<div id="bottom-panel" class="data-panel">
+    WARNING: UNKNOWN CONNECTION DETECTED // ENCRYPTING BACKLINK...
+</div>
+
+<script>
+    // صوت السونار
+    let audioCtx;
+    function playSonar() {
+        if(!audioCtx) audioCtx = new AudioContext();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+    }
+    setInterval(playSonar, 4000); // مع كل لفة للرادار
+
+    // جلب بيانات حقيقية
+    async function getCyberData() {
+        try {
+            const res = await fetch('https://ipapi.co/json/');
+            const data = await res.json();
+            document.getElementById('ip').innerText = data.ip;
+            document.getElementById('loc').innerText = data.city + ", " + data.country_code;
+            document.getElementById('lat').innerText = data.latitude;
+            document.getElementById('lon').innerText = data.longitude;
+        } catch (e) {
+            document.getElementById('ip').innerText = "127.0.0.1";
+        }
+    }
+    getCyberData();
+
+    // أرقام عشوائية متغيرة
+    setInterval(() => {
+        if(Math.random() > 0.7) {
+            document.getElementById('lat').innerText = (Math.random() * 90).toFixed(3);
+            document.getElementById('lon').innerText = (Math.random() * 180).toFixed(3);
+        }
+    }, 500);
+</script>
+
+</body>
+</html>
