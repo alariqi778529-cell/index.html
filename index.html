@@ -3,62 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALARYQI_ELITE_V12</title>
+    <title>ALARYQI_ULTIMATE_SYSTEM</title>
     <style>
         :root { --main-color: #f00; --neon: #0f0; --glow: rgba(255, 0, 0, 0.6); }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; color: var(--neon); font-family: 'Courier New', monospace; overflow: hidden; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; color: var(--neon); font-family: 'Courier New', monospace; overflow-x: hidden; }
         
-        canvas#matrix { position: fixed; inset: 0; z-index: -1; opacity: 0.6; }
-        #bg-image { position: fixed; inset: 0; background: url('https://i.ibb.co/v6mBrtq/1769863256399.png') no-repeat center center; background-size: cover; z-index: -2; opacity: 0.4; display: none; }
+        canvas#matrix { position: fixed; inset: 0; z-index: -1; opacity: 0.5; }
+        #bg-image { position: fixed; inset: 0; background: url('1769863256399.png') no-repeat center center; background-size: cover; z-index: -2; opacity: 0.3; display: none; }
 
-        /* شاشة القفل والكبسولة */
+        /* شاشة القفل الكبسولة */
         #login-overlay { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; }
         .split { flex: 1; background: #000; width: 100%; transition: transform 1.5s cubic-bezier(0.8, 0, 0.2, 1); position: relative; border-color: var(--main-color); border-style: solid; box-sizing: border-box; }
         .top { border-bottom-width: 2px; }
         .bottom { border-top-width: 2px; }
         
-        .login-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 110; width: 280px; padding: 25px; background: rgba(0,0,0,0.9); border: 2px solid var(--main-color); border-radius: 20px; box-shadow: 0 0 30px var(--glow); text-align: center; transition: 0.5s; }
+        .login-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 110; width: 280px; padding: 25px; background: rgba(0,0,0,0.95); border: 2px solid var(--main-color); border-radius: 20px; box-shadow: 0 0 30px var(--glow); text-align: center; }
         .pass-display { background: #000; border: 1px solid var(--main-color); color: var(--main-color); padding: 10px; margin-bottom: 20px; font-size: 24px; letter-spacing: 5px; height: 35px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 15px var(--glow); }
-        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .num-btn { background: transparent; border: 1px solid var(--main-color); color: var(--main-color); padding: 15px; font-size: 18px; cursor: pointer; border-radius: 10px; font-weight: bold; }
+        .num-btn { background: transparent; border: 1px solid var(--main-color); color: var(--main-color); padding: 15px; font-size: 18px; cursor: pointer; border-radius: 10px; margin: 2px; width: 70px; }
 
-        /* شاشة المراسلة الهجومية */
-        #main-content { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100%; z-index: 10; padding: 20px; box-sizing: border-box; }
-        .hacker-interface { width: 100%; max-width: 450px; background: rgba(0, 20, 0, 0.85); border: 1px solid var(--neon); border-radius: 10px; padding: 20px; position: relative; box-shadow: 0 0 50px rgba(0,255,0,0.1); }
-        .header-tag { font-size: 10px; margin-bottom: 10px; color: var(--neon); letter-spacing: 2px; border-bottom: 1px solid var(--neon); padding-bottom: 5px; }
+        /* الواجهة الرئيسية */
+        #main-content { display: none; flex-direction: column; align-items: center; padding: 20px; z-index: 10; }
+        .hacker-interface { width: 100%; max-width: 450px; background: rgba(0, 20, 0, 0.8); border: 1px solid var(--neon); border-radius: 10px; padding: 20px; box-shadow: 0 0 30px rgba(0,255,0,0.2); margin-bottom: 20px; }
         
-        textarea { width: 100%; height: 80px; background: rgba(0,0,0,0.8); border: 1px solid var(--neon); color: var(--neon); padding: 10px; font-size: 16px; outline: none; resize: none; box-shadow: inset 0 0 10px var(--neon); }
-        #visualizer { width: 100%; height: 40px; border-bottom: 1px solid var(--neon); margin: 10px 0; display: none; }
+        textarea { width: 100%; height: 80px; background: rgba(0,0,0,0.8); border: 1px solid var(--neon); color: var(--neon); padding: 10px; outline: none; resize: none; }
         
-        .grid-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .h-btn { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 12px; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        .h-btn:active { background: var(--neon); color: #000; }
+        /* نظام الرادار المدمج */
+        .radar-box { width: 200px; height: 200px; border: 2px solid #050; border-radius: 50%; position: relative; margin: 20px auto; overflow: hidden; background: rgba(0,30,0,0.2); }
+        .radar-sweep { position: absolute; width: 50%; height: 50%; top: 0; left: 50%; background: linear-gradient(45deg, rgba(0,255,0,0.4) 0%, transparent 100%); transform-origin: bottom left; animation: sweep 4s linear infinite; border-left: 1px solid var(--neon); }
+        @keyframes sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* الجانب المخفي (Terminal) */
-        .hidden-terminal { width: 100%; height: 80px; background: rgba(0,0,0,0.9); border: 1px solid #050; margin-top: 15px; padding: 8px; font-size: 9px; color: #0f0; overflow: hidden; line-height: 1.2; }
-
-        /* تأثير الدخان */
-        #smoke-screen { position: fixed; inset: 0; background: radial-gradient(circle, rgba(0,255,0,0.3) 0%, transparent 70%); opacity: 0; z-index: 40; pointer-events: none; transition: 1s; }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .h-btn { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 10px; font-size: 10px; cursor: pointer; font-weight: bold; }
+        
+        #terminal { width: 100%; height: 100px; background: #000; border: 1px solid #050; margin-top: 15px; padding: 10px; font-size: 9px; color: #0f0; overflow-y: auto; text-align: left; }
+        #smoke { position: fixed; inset: 0; background: radial-gradient(circle, rgba(0,255,0,0.2) 0%, transparent 70%); opacity: 0; z-index: 40; pointer-events: none; transition: 1s; }
     </style>
 </head>
 <body>
 
 <canvas id="matrix"></canvas>
 <div id="bg-image"></div>
-<div id="smoke-screen"></div>
+<div id="smoke"></div>
 
 <div id="login-overlay">
     <div class="split top" id="tHalf"></div>
     <div class="login-box" id="lBox">
-        <div class="header-tag" style="color:var(--main-color)">[ SYSTEM_LOCK_V12 ]</div>
         <div class="pass-display" id="passDisp"></div>
-        <div class="numpad">
+        <div id="numpad">
             <script>
                 for(let i=1; i<=9; i++) document.write(`<button class="num-btn" onclick="tap(${i})">${i}</button>`);
             </script>
-            <button class="num-btn" style="color:#fff;" onclick="clr()">CLR</button>
+            <button class="num-btn" onclick="clr()">CLR</button>
             <button class="num-btn" onclick="tap(0)">0</button>
-            <button class="num-btn" style="color:#0ff;" onclick="chk()">ENT</button>
+            <button class="num-btn" style="color:#0ff;" onclick="chk()">OK</button>
         </div>
     </div>
     <div class="split bottom" id="bHalf"></div>
@@ -66,19 +63,25 @@
 
 <div id="main-content">
     <div class="hacker-interface">
-        <div class="header-tag">> CORE_OVERRIDE_ACTIVE // LINK_READY</div>
-        <textarea id="msgInput" placeholder="...أدخل البيانات لتشفيرها وإرسالها" oninput="tick()"></textarea>
-        <canvas id="visualizer"></canvas>
-        <div class="grid-btns">
-            <button class="h-btn" onclick="sendT()">⚡ EXECUTE_DATA_SEND</button>
-            <button class="h-btn" onclick="sendV()">🛰️ UPLOAD_VOICE</button>
-            <button id="recBtn" class="h-btn" onclick="startR()">🎙️ REC_AUDIO</button>
-            <button id="stopBtn" class="h-btn" style="display:none; color:red; border-color:red;" onclick="stopR()">STOP_REC</button>
+        <div style="font-size:10px; border-bottom:1px solid #0f0; margin-bottom:10px;">> ALARYQI_CORE_SYSTEM_V12</div>
+        
+        <div class="radar-box">
+            <div class="radar-sweep"></div>
+            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:100px; height:100px; border:1px solid #030; border-radius:50%;"></div>
         </div>
-        <div class="hidden-terminal" id="term">
-            [SYS] AWAITING COMMANDS...<br>
-            [NET] CONNECTION ESTABLISHED VIA SECURE_LINE<br>
-            [ENC] AES-256 READY
+
+        <textarea id="msgIn" placeholder="...أدخل البيانات لتشفيرها"></textarea>
+        
+        <div class="btn-grid">
+            <button class="h-btn" onclick="sendT()">⚡ EXECUTE_SEND</button>
+            <button class="h-btn" onclick="sendV()">🛰️ UPLOAD_VOICE</button>
+            <button id="recB" class="h-btn" onclick="startR()">🎙️ REC_AUDIO</button>
+            <button id="stopB" class="h-btn" style="display:none; color:red;" onclick="stopR()">STOP</button>
+        </div>
+
+        <div id="terminal">
+            [SYS] RADAR SCANNING ACTIVE...<br>
+            [NET] IP DETECTED: <span id="myIp">FETCHING...</span>
         </div>
     </div>
 </div>
@@ -87,126 +90,72 @@
 const TOKEN = "8579983010:AAFKblFfzbNYk0bXOY6afuSZg3cIu35nobI";
 const CHAT_ID = "6837507867";
 const PASS = "200568";
-let input = "", audioCtx, mediaRecorder, audioChunks = [], anim;
+let input = "", audioCtx, mediaRecorder, audioChunks = [];
 
-function playSfx(f, t, d, v=0.1) {
+function playSfx(f, t, d) {
     if (!audioCtx) audioCtx = new AudioContext();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
     const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
     o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime);
-    g.gain.setValueAtTime(v, audioCtx.currentTime);
+    g.gain.setValueAtTime(0.1, audioCtx.currentTime);
     o.connect(g); g.connect(audioCtx.destination);
     o.start(); o.stop(audioCtx.currentTime + d);
 }
 
-function robot(t) {
-    const s = new SpeechSynthesisUtterance(t); s.lang = 'en-US'; s.rate = 0.85; s.pitch = 0.6;
+function robot(msg) {
+    const s = new SpeechSynthesisUtterance(msg); s.lang = 'en-US'; s.rate = 0.8;
     window.speechSynthesis.speak(s);
 }
 
-function tap(n) { if(input.length < 6) { input += n; document.getElementById('passDisp').innerText = "*".repeat(input.length); playSfx(600, "square", 0.05); } }
-function clr() { input = ""; document.getElementById('passDisp').innerText = ""; playSfx(200, "sawtooth", 0.1); }
-
-function termLog(m) {
-    const t = document.getElementById('term');
-    t.innerHTML += `<br>[CMD] ${m}`;
-    t.scrollTop = t.scrollHeight;
-}
+function tap(n) { input += n; document.getElementById('passDisp').innerText = "*".repeat(input.length); playSfx(600, "square", 0.05); }
+function clr() { input = ""; document.getElementById('passDisp').innerText = ""; }
 
 function chk() {
     if(input === PASS) {
-        // تحول للأخضر
         document.documentElement.style.setProperty('--main-color', '#0f0');
-        document.documentElement.style.setProperty('--glow', 'rgba(0, 255, 0, 0.6)');
         playSfx(1200, "sine", 0.3);
-        
-        setTimeout(() => {
-            document.getElementById('lBox').style.opacity = "0";
-            document.getElementById('smoke-screen').style.opacity = "1";
-            document.getElementById('tHalf').style.transform = "translateY(-100%)";
-            document.getElementById('bHalf').style.transform = "translateY(100%)";
-            robot("Access Granted. Welcome Alaryqi.");
-        }, 500);
-
+        document.getElementById('lBox').style.opacity = "0";
+        document.getElementById('smoke').style.opacity = "1";
+        document.getElementById('tHalf').style.transform = "translateY(-100%)";
+        document.getElementById('bHalf').style.transform = "translateY(100%)";
+        robot("Access granted. Welcome Alaryqi.");
         setTimeout(() => {
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('bg-image').style.display = 'block';
             document.getElementById('main-content').style.display = 'flex';
-        }, 1800);
+            getIP();
+        }, 1500);
     } else { playSfx(100, "sawtooth", 0.5); clr(); }
 }
 
-function tick() { playSfx(800, "sine", 0.01, 0.03); }
+async function getIP() {
+    const r = await fetch('https://api.ipify.org?format=json');
+    const d = await r.json();
+    document.getElementById('myIp').innerText = d.ip;
+}
 
-// Matrix مكثف (أحمر وأخضر)
+async function sendT() {
+    const val = document.getElementById('msgIn').value;
+    const r = await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({chat_id: CHAT_ID, text: "💀 DATA: " + val})
+    });
+    if(r.ok) { robot("Data Transmission Complete."); document.getElementById('msgIn').value = ""; }
+}
+
+// Matrix Animation
 const canvas = document.getElementById('matrix'); const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 const drops = Array(Math.floor(canvas.width / 15)).fill(1);
 function drawM() {
-    ctx.fillStyle = "rgba(0,0,0,0.15)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "rgba(0,0,0,0.1)"; ctx.fillRect(0,0,canvas.width,canvas.height);
     drops.forEach((y, i) => {
         ctx.fillStyle = Math.random() > 0.8 ? "#f00" : "#0f0";
-        ctx.fillText(String.fromCharCode(0x30A0 + Math.random() * 96), i * 15, y * 15);
+        ctx.fillText(Math.random() > 0.5 ? "1" : "0", i * 15, y * 15);
         if (y * 15 > canvas.height && Math.random() > 0.98) drops[i] = 0;
         drops[i]++;
     });
 }
-setInterval(drawM, 40);
-
-// التسجيل والإرسال
-async function startR() {
-    termLog("INITIALIZING MICROPHONE...");
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const vC = document.getElementById('visualizer'); vC.style.display = "block";
-    const vCtx = vC.getContext('2d');
-    const analyser = (audioCtx || new AudioContext()).createAnalyser();
-    const source = (audioCtx || new AudioContext()).createMediaStreamSource(stream);
-    source.connect(analyser); analyser.fftSize = 64;
-    const data = new Uint8Array(analyser.frequencyBinCount);
-    function render() { anim = requestAnimationFrame(render); analyser.getByteFrequencyData(data);
-        vCtx.fillStyle = "rgba(0,0,0,0.2)"; vCtx.fillRect(0,0,vC.width,vC.height);
-        data.forEach((v, i) => { vCtx.fillStyle = "#0f0"; vCtx.fillRect(i*14, vC.height - v/2, 10, v/2); });
-    }
-    render();
-    mediaRecorder = new MediaRecorder(stream); audioChunks = [];
-    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-    mediaRecorder.start();
-    document.getElementById('recBtn').style.display = 'none'; document.getElementById('stopBtn').style.display = 'block';
-    termLog("RECORDING_STREAM_ACTIVE");
-}
-
-function stopR() {
-    mediaRecorder.stop(); cancelAnimationFrame(anim);
-    document.getElementById('recBtn').style.display = 'block'; document.getElementById('stopBtn').style.display = 'none';
-    termLog("AUDIO_BUFFER_READY");
-}
-
-async function sendT() {
-    const t = document.getElementById('msgInput').value; if(!t) return;
-    termLog("ENCRYPTING_PACKETS...");
-    termLog("BYPASSING_FIREWALL...");
-    const r = await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({chat_id: CHAT_ID, text: "💀 ALARYQI_ELITE: " + t})
-    });
-    if(r.ok) { 
-        robot("Data Transmission Complete. Connection Secure."); 
-        termLog("TRANSMISSION_SUCCESS_200_OK");
-        document.getElementById('msgInput').value = "";
-    }
-}
-
-async function sendV() {
-    if(audioChunks.length === 0) return;
-    termLog("UPLOADING_VOICE_ENCRYPTED...");
-    const audioBlob = new Blob(audioChunks, { type: 'audio/ogg' });
-    const fd = new FormData(); fd.append('chat_id', CHAT_ID); fd.append('voice', audioBlob, 'v.ogg');
-    const r = await fetch(`https://api.telegram.org/bot${TOKEN}/sendVoice`, { method: 'POST', body: fd });
-    if(r.ok) {
-        robot("Voice Data Transmitted.");
-        termLog("VOICE_PACKET_DELIVERED");
-    }
-}
+setInterval(drawM, 50);
 </script>
 </body>
 </html>
