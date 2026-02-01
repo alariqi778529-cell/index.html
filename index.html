@@ -1,39 +1,40 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALARYQI_ELITE_SYSTEM_V9</title>
+    <title>ALARYQI_ELITE_SYSTEM_V10</title>
     <style>
-        :root { --main-color: #f00; --glow: rgba(255, 0, 0, 0.5); }
-        body { background-color: #000; color: #0f0; font-family: 'Courier New', monospace; margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        canvas#matrix { position: absolute; top: 0; left: 0; z-index: -2; }
+        :root { --main-color: #f00; --glow: rgba(255, 0, 0, 0.5); --neon: #0f0; }
+        body { background-color: #000; color: var(--neon); font-family: 'Courier New', monospace; margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        canvas#matrix { position: absolute; top: 0; left: 0; z-index: -2; filter: brightness(0.8); }
         
         /* شاشة القفل */
-        #login-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 100; }
-        .login-box { border: 2px solid var(--main-color); padding: 20px; background: rgba(10,0,0,0.9); box-shadow: 0 0 20px var(--glow); text-align: center; border-radius: 15px; width: 300px; transition: 0.5s; }
-        .pass-display { background: #000; border: 1px solid var(--main-color); color: var(--main-color); padding: 15px; margin-bottom: 15px; font-size: 22px; letter-spacing: 5px; height: 30px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 10px var(--glow); }
+        #login-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.96); display: flex; align-items: center; justify-content: center; z-index: 100; }
+        .login-box { border: 2px solid var(--main-color); padding: 20px; background: rgba(10,0,0,0.9); box-shadow: 0 0 25px var(--glow); text-align: center; border-radius: 15px; width: 300px; transition: 0.5s; }
+        .pass-display { background: #000; border: 1px solid var(--main-color); color: var(--main-color); padding: 12px; margin-bottom: 15px; font-size: 22px; letter-spacing: 5px; height: 35px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 15px var(--glow); }
         .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .num-btn { background: transparent; border: 1px solid var(--main-color); color: var(--main-color); padding: 15px; font-size: 18px; cursor: pointer; border-radius: 5px; font-weight: bold; }
         .num-btn:active { background: var(--main-color); color: #000; }
 
         /* الواجهة الرئيسية */
         #main-content { display: none; flex-direction: column; align-items: center; width: 100%; z-index: 10; gap: 10px; }
-        .hacker-box { background: rgba(0, 10, 0, 0.95); padding: 15px; border: 1px solid #0f0; box-shadow: 0 0 20px #0f0; width: 95%; max-width: 450px; text-align: center; border-radius: 8px; position: relative; }
-        #display-text { width: 100%; height: 50px; background: #000; border: 1px solid #050; color: #0f0; padding: 10px; margin-bottom: 10px; text-align: left; overflow: hidden; font-size: 14px; box-sizing: border-box; }
+        .hacker-box { background: rgba(0, 10, 0, 0.95); padding: 15px; border: 1px solid var(--neon); box-shadow: 0 0 20px var(--neon); width: 95%; max-width: 480px; text-align: center; border-radius: 8px; position: relative; }
+        #display-text { width: 100%; height: 60px; background: #000; border: 1px solid #050; color: var(--neon); padding: 10px; margin-bottom: 10px; text-align: right; overflow-y: auto; font-size: 14px; box-sizing: border-box; white-space: pre-wrap; }
         
-        /* كيبورد الحروف الخضراء */
-        .keyboard { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; background: rgba(0,20,0,0.8); padding: 10px; border-radius: 5px; border: 1px solid #0f0; }
-        .key { background: #000; border: 1px solid #0f0; color: #0f0; padding: 8px 2px; font-size: 12px; cursor: pointer; border-radius: 3px; text-align: center; }
-        .key:active { background: #0f0; color: #000; }
-        .key.wide { grid-column: span 2; }
-        .key.space { grid-column: span 6; }
+        /* كيبورد احترافي */
+        .keyboard { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; background: rgba(0,25,0,0.9); padding: 8px; border-radius: 5px; border: 1px solid var(--neon); }
+        .key { background: #000; border: 1px solid var(--neon); color: var(--neon); padding: 10px 0; font-size: 13px; cursor: pointer; border-radius: 3px; text-align: center; min-width: 30px; }
+        .key:active { background: var(--neon); color: #000; }
+        .key.wide { grid-column: span 2; font-size: 11px; color: #ff0; }
+        .key.space { grid-column: span 5; }
+        .key.lang { background: #033; color: #0ff; grid-column: span 1; }
 
-        #visualizer { width: 100%; height: 40px; background: #000; border: 1px solid #0f0; margin-bottom: 10px; display: none; }
+        #visualizer { width: 100%; height: 40px; background: #000; border: 1px solid var(--neon); margin-bottom: 10px; display: none; }
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .hacker-btn { background: transparent; border: 1px solid #0f0; color: #0f0; padding: 10px; cursor: pointer; font-size: 10px; font-weight: bold; }
-        #console { background: #000; height: 50px; margin-top: 10px; font-size: 9px; text-align: left; padding: 5px; border: 1px solid #050; color: #0f0; overflow: hidden; }
-        .close-x { position: absolute; top: 5px; right: 10px; color: red; cursor: pointer; font-weight: bold; }
+        .hacker-btn { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 10px; cursor: pointer; font-size: 10px; font-weight: bold; }
+        #console { background: #000; height: 40px; margin-top: 8px; font-size: 9px; text-align: left; padding: 5px; border: 1px solid #050; color: var(--neon); overflow: hidden; }
+        .close-x { position: absolute; top: 5px; right: 10px; color: red; cursor: pointer; font-weight: bold; font-size: 18px; }
     </style>
 </head>
 <body>
@@ -42,42 +43,35 @@
 
 <div id="login-overlay">
     <div class="login-box" id="lBox">
-        <div style="margin-bottom: 10px; font-size: 10px; color: var(--main-color);">[ ALARYQI_SECURE_V9 ]</div>
+        <div style="margin-bottom: 10px; font-size: 10px; color: var(--main-color);">[ SECURE_ACCESS_V10 ]</div>
         <div class="pass-display" id="passDisp"></div>
         <div class="numpad">
             <script>
                 for(let i=1; i<=9; i++) document.write(`<button class="num-btn" onclick="tapNum(${i})">${i}</button>`);
             </script>
-            <button class="num-btn" style="color:white; border-color:white;" onclick="clearPass()">C</button>
+            <button class="num-btn" style="color:white;" onclick="clearPass()">C</button>
             <button class="num-btn" onclick="tapNum(0)">0</button>
-            <button class="num-btn" style="color:#0ff; border-color:#0ff;" onclick="checkPass()">OK</button>
+            <button class="num-btn" style="color:#0ff;" onclick="checkPass()">OK</button>
         </div>
     </div>
 </div>
 
 <div id="main-content">
     <div class="hacker-box">
-        <span class="close-x" onclick="location.reload()">X</span>
-        <div id="display-text">> AWAITING_INPUT...</div>
+        <span class="close-x" onclick="location.reload()">×</span>
+        <div id="display-text">> AWAITING_STREAM...</div>
         <canvas id="visualizer"></canvas>
         
-        <div class="keyboard" id="hackerKbd">
-            <script>
-                const keys = "QWERTYUIOPASDFGHJKLZXCVBNM".split("");
-                keys.forEach(k => document.write(`<div class="key" onclick="tapKey('${k}')">${k}</div>`));
-            </script>
-            <div class="key wide" onclick="tapKey('BACK')">DEL</div>
-            <div class="key space" onclick="tapKey(' ')">SPACE</div>
-            <div class="key wide" onclick="tapKey('ENTER')">CLEAR</div>
-        </div>
+        <div class="keyboard" id="kbd">
+            </div>
 
         <div class="btn-grid">
-            <button class="hacker-btn" onclick="sendText()">[ EXECUTE_SEND ]</button>
-            <button class="hacker-btn" onclick="sendVoice()">[ UPLOAD_VOICE ]</button>
-            <button id="recBtn" class="hacker-btn" onclick="startRec()">REC_AUDIO 🎙️</button>
+            <button class="hacker-btn" onclick="sendText()">⚡ EXECUTE_SEND</button>
+            <button class="hacker-btn" onclick="sendVoice()">🛰️ UPLOAD_VOICE</button>
+            <button id="recBtn" class="hacker-btn" onclick="startRec()">🎙️ REC_AUDIO</button>
             <button id="stopBtn" class="hacker-btn" style="display:none; color:red; border-color:red;" onclick="stopRec()">STOP</button>
         </div>
-        <div id="console">> CONSOLE_READY...</div>
+        <div id="console">> CORE_READY...</div>
     </div>
 </div>
 
@@ -86,8 +80,39 @@ const TOKEN = "8579983010:AAFKblFfzbNYk0bXOY6afuSZg3cIu35nobI";
 const CHAT_ID = "6837507867";
 const CORRECT_PASS = "200568";
 let currentPass = "", currentMsg = "", audioCtx, mediaRecorder, audioChunks = [], animationId;
+let currentLang = 'EN';
 
-// نظام الصوت
+const keysEN = ["Q","W","E","R","T","Y","U","I","O","P","A","S","D","F","G","H","J","K","L","Z","X","C","V","B","N","M"];
+const keysAR = ["ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج","ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط","ذ","ء","ؤ","ر","ى","ة","و","ز"];
+
+// بناء الكيبورد
+function buildKeyboard() {
+    const kbd = document.getElementById('kbd');
+    kbd.innerHTML = "";
+    const list = currentLang === 'EN' ? keysEN : keysAR;
+    list.forEach(k => {
+        const div = document.createElement('div');
+        div.className = "key";
+        div.innerText = k;
+        div.onclick = () => tapKey(k);
+        kbd.appendChild(div);
+    });
+    // أزرار التحكم
+    const langBtn = document.createElement('div'); langBtn.className="key lang"; langBtn.innerText="🌐"; langBtn.onclick=switchLang; kbd.appendChild(langBtn);
+    const spaceBtn = document.createElement('div'); spaceBtn.className="key space"; spaceBtn.innerText="SPACE"; spaceBtn.onclick=()=>tapKey(" "); kbd.appendChild(spaceBtn);
+    const delBtn = document.createElement('div'); delBtn.className="key wide"; delBtn.innerText="DEL"; delBtn.onclick=()=>tapKey("BACK"); kbd.appendChild(delBtn);
+    const clrBtn = document.createElement('div'); clrBtn.className="key wide"; clrBtn.innerText="CLR"; clrBtn.onclick=()=>tapKey("CLR"); kbd.appendChild(clrBtn);
+}
+
+function switchLang() {
+    currentLang = currentLang === 'EN' ? 'AR' : 'EN';
+    playSfx(1000, "sine", 0.05);
+    buildKeyboard();
+}
+
+buildKeyboard();
+
+// نظام الصوت والماتريكس (مكثف)
 function playSfx(f, t, d, v=0.1) {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -103,56 +128,56 @@ function speak(t) {
     window.speechSynthesis.speak(s);
 }
 
-// وظائف شاشة القفل
-function tapNum(n) {
-    if(currentPass.length < 6) {
-        currentPass += n;
-        document.getElementById('passDisp').innerText = "*".repeat(currentPass.length);
-        playSfx(600, "square", 0.05);
-    }
+const canvas = document.getElementById('matrix'); const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+// تكثيف الأسطر (تقليل المسافة)
+const drops = Array(Math.floor(canvas.width / 15)).fill(1);
+function drawMatrix() {
+    ctx.fillStyle = "rgba(0,0,0,0.15)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    drops.forEach((y, i) => {
+        // تداخل الأحمر والأخضر
+        ctx.fillStyle = Math.random() > 0.5 ? "#f00" : "#0f0";
+        ctx.font = "14px monospace";
+        ctx.fillText(Math.random() > 0.5 ? "1" : "0", i * 15, y * 15);
+        if (y * 15 > canvas.height && Math.random() > 0.98) drops[i] = 0;
+        drops[i]++;
+    });
 }
+setInterval(drawMatrix, 40);
+
+// المنطق البرمجي
+function tapNum(n) { if(currentPass.length < 6) { currentPass += n; document.getElementById('passDisp').innerText = "*".repeat(currentPass.length); playSfx(600, "square", 0.05); } }
 function clearPass() { currentPass = ""; document.getElementById('passDisp').innerText = ""; playSfx(200, "sawtooth", 0.1); }
 
 function checkPass() {
     if(currentPass === CORRECT_PASS) {
-        // تحول للون الأخضر عند النجاح
         document.documentElement.style.setProperty('--main-color', '#0f0');
-        document.documentElement.style.setProperty('--glow', 'rgba(0, 255, 0, 0.5)');
-        playSfx(1000, "sine", 0.2);
-        speak("Welcome Alaryqi. Access granted.");
-        setTimeout(() => {
-            document.getElementById('login-overlay').style.display = 'none';
-            document.getElementById('main-content').style.display = 'flex';
-        }, 1000);
-    } else {
-        playSfx(100, "sawtooth", 0.5);
-        clearPass();
-    }
+        playSfx(1200, "sine", 0.2); speak("Welcome Alaryqi. Access granted.");
+        setTimeout(() => { document.getElementById('login-overlay').style.display='none'; document.getElementById('main-content').style.display='flex'; }, 1000);
+    } else { playSfx(100, "sawtooth", 0.5); clearPass(); }
 }
 
-// وظائف الكيبورد
 function tapKey(k) {
     playSfx(800, "sine", 0.02, 0.05);
     if(k === 'BACK') currentMsg = currentMsg.slice(0, -1);
-    else if(k === 'ENTER') currentMsg = "";
-    else if(currentMsg.length < 100) currentMsg += k;
+    else if(k === 'CLR') currentMsg = "";
+    else if(currentMsg.length < 200) currentMsg += k;
     document.getElementById('display-text').innerText = "> " + (currentMsg || "AWAITING_INPUT...");
 }
 
-// وظائف الإرسال والتسجيل
 async function startRec() {
     playSfx(900, "sine", 0.1);
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const vCanvas = document.getElementById('visualizer'); vCanvas.style.display = "block";
     const vCtx = vCanvas.getContext('2d');
-    const analyser = audioCtx.createAnalyser();
-    const source = audioCtx.createMediaStreamSource(stream);
+    const analyser = (audioCtx || new AudioContext()).createAnalyser();
+    const source = (audioCtx || new AudioContext()).createMediaStreamSource(stream);
     source.connect(analyser); analyser.fftSize = 64;
     const dataArray = new Uint8Array(analyser.frequencyBinCount);
     function draw() {
         animationId = requestAnimationFrame(draw); analyser.getByteFrequencyData(dataArray);
         vCtx.fillStyle = "#000"; vCtx.fillRect(0,0,vCanvas.width,vCanvas.height);
-        dataArray.forEach((v, i) => { vCtx.fillStyle = "#0f0"; vCtx.fillRect(i*14, vCanvas.height - v/2, 10, v/2); });
+        dataArray.forEach((v, i) => { vCtx.fillStyle = "#0f0"; vCtx.fillRect(i*16, vCanvas.height - v/2, 12, v/2); });
     }
     draw();
     mediaRecorder = new MediaRecorder(stream); audioChunks = [];
@@ -162,9 +187,10 @@ async function startRec() {
 }
 
 function stopRec() {
-    playSfx(400, "sine", 0.1);
-    mediaRecorder.stop(); cancelAnimationFrame(animationId);
-    document.getElementById('recBtn').style.display = 'block'; document.getElementById('stopBtn').style.display = 'none';
+    playSfx(400, "sine", 0.1); mediaRecorder.stop(); cancelAnimationFrame(animationId);
+    document.getElementById('recBtn').style.display = 'none'; document.getElementById('stopBtn').style.display = 'none';
+    // إظهار زر الإرسال فقط
+    setTimeout(() => { document.getElementById('recBtn').style.display = 'block'; }, 1000);
 }
 
 async function sendText() {
@@ -172,9 +198,9 @@ async function sendText() {
     playSfx(1200, "square", 0.1);
     await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
         method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({chat_id: CHAT_ID, text: "💀 ALARYQI: " + currentMsg})
+        body: JSON.stringify({chat_id: CHAT_ID, text: "💀 DATA: " + currentMsg})
     });
-    currentMsg = ""; document.getElementById('display-text').innerText = "> SEND_COMPLETE";
+    currentMsg = ""; document.getElementById('display-text').innerText = "> SEND_SUCCESS";
 }
 
 async function sendVoice() {
@@ -183,22 +209,8 @@ async function sendVoice() {
     const audioBlob = new Blob(audioChunks, { type: 'audio/ogg' });
     const fd = new FormData(); fd.append('chat_id', CHAT_ID); fd.append('voice', audioBlob, 'v.ogg');
     await fetch(`https://api.telegram.org/bot${TOKEN}/sendVoice`, { method: 'POST', body: fd });
+    document.getElementById('display-text').innerText = "> VOICE_TRANSMITTED";
 }
-
-// Matrix Background
-const canvas = document.getElementById('matrix'); const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-const drops = Array(Math.floor(canvas.width / 20)).fill(1);
-function drawMatrix() {
-    ctx.fillStyle = "rgba(0,0,0,0.1)"; ctx.fillRect(0,0,canvas.width,canvas.height);
-    drops.forEach((y, i) => {
-        ctx.fillStyle = Math.random() > 0.9 ? "#f00" : "#0f0";
-        ctx.fillText(Math.random() > 0.5 ? "1" : "0", i * 20, y * 20);
-        if (y * 20 > canvas.height && Math.random() > 0.975) drops[i] = 0;
-        drops[i]++;
-    });
-}
-setInterval(drawMatrix, 50);
 </script>
 </body>
 </html>
