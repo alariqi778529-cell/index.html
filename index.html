@@ -3,75 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALARYQI_ELITE_SYSTEM_V11</title>
+    <title>ALARYQI_ELITE_V12</title>
     <style>
-        :root { --main-color: #f00; --glow: rgba(255, 0, 0, 0.5); --neon: #0f0; }
-        body { background-color: #000; color: var(--neon); font-family: 'Courier New', monospace; margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        canvas#matrix { position: absolute; inset: 0; z-index: -2; filter: brightness(0.6); }
-
-        /* شاشة القفل المنقسمة */
-        #login-overlay { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; overflow: hidden; }
-        .split-half { flex: 1; background: rgba(0,0,0,0.98); width: 100%; transition: transform 1.2s cubic-bezier(0.7, 0, 0.3, 1); position: relative; display: flex; justify-content: center; }
-        .top-half { align-items: flex-end; border-bottom: 1px solid var(--main-color); }
-        .bottom-half { align-items: flex-start; border-top: 1px solid var(--main-color); }
+        :root { --main-color: #f00; --neon: #0f0; --glow: rgba(255, 0, 0, 0.6); }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; color: var(--neon); font-family: 'Courier New', monospace; overflow: hidden; }
         
-        /* صندوق الدخول */
-        .login-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px solid var(--main-color); padding: 25px; background: rgba(10,0,0,0.95); box-shadow: 0 0 30px var(--glow); text-align: center; border-radius: 15px; width: 280px; z-index: 110; transition: opacity 0.5s; }
-        .pass-display { background: #000; border: 1px solid var(--main-color); color: var(--main-color); padding: 10px; margin-bottom: 15px; font-size: 24px; letter-spacing: 8px; height: 35px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 15px var(--glow); }
+        canvas#matrix { position: fixed; inset: 0; z-index: -1; opacity: 0.6; }
+        #bg-image { position: fixed; inset: 0; background: url('https://i.ibb.co/v6mBrtq/1769863256399.png') no-repeat center center; background-size: cover; z-index: -2; opacity: 0.4; display: none; }
+
+        /* شاشة القفل والكبسولة */
+        #login-overlay { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; }
+        .split { flex: 1; background: #000; width: 100%; transition: transform 1.5s cubic-bezier(0.8, 0, 0.2, 1); position: relative; border-color: var(--main-color); border-style: solid; box-sizing: border-box; }
+        .top { border-bottom-width: 2px; }
+        .bottom { border-top-width: 2px; }
+        
+        .login-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 110; width: 280px; padding: 25px; background: rgba(0,0,0,0.9); border: 2px solid var(--main-color); border-radius: 20px; box-shadow: 0 0 30px var(--glow); text-align: center; transition: 0.5s; }
+        .pass-display { background: #000; border: 1px solid var(--main-color); color: var(--main-color); padding: 10px; margin-bottom: 20px; font-size: 24px; letter-spacing: 5px; height: 35px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 15px var(--glow); }
         .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .num-btn { background: transparent; border: 1px solid var(--main-color); color: var(--main-color); padding: 15px; font-size: 18px; cursor: pointer; border-radius: 8px; }
-        
-        /* تأثير الدخان والكبسولة */
-        .smoke-bg { position: fixed; inset: 0; background: radial-gradient(circle, rgba(0,255,0,0.2) 0%, transparent 70%); opacity: 0; transition: opacity 1.5s; z-index: 50; pointer-events: none; }
+        .num-btn { background: transparent; border: 1px solid var(--main-color); color: var(--main-color); padding: 15px; font-size: 18px; cursor: pointer; border-radius: 10px; font-weight: bold; }
 
-        /* الواجهة الرئيسية الاحترافية */
-        #main-content { display: none; flex-direction: column; align-items: center; width: 90%; max-width: 450px; z-index: 10; animation: fadeIn 2s; }
-        .hacker-frame { position: relative; background: rgba(0, 15, 0, 0.9); border: 1px solid var(--neon); padding: 25px; border-radius: 5px; box-shadow: 0 0 40px rgba(0,255,0,0.2); width: 100%; box-sizing: border-box; }
-        .hacker-frame::before { content: ""; position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px; border: 1px solid rgba(0,255,0,0.1); pointer-events: none; }
+        /* شاشة المراسلة الهجومية */
+        #main-content { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100%; z-index: 10; padding: 20px; box-sizing: border-box; }
+        .hacker-interface { width: 100%; max-width: 450px; background: rgba(0, 20, 0, 0.85); border: 1px solid var(--neon); border-radius: 10px; padding: 20px; position: relative; box-shadow: 0 0 50px rgba(0,255,0,0.1); }
+        .header-tag { font-size: 10px; margin-bottom: 10px; color: var(--neon); letter-spacing: 2px; border-bottom: 1px solid var(--neon); padding-bottom: 5px; }
         
-        textarea { width: 100%; height: 100px; background: #000; border: 1px solid #0f0; color: #0f0; padding: 12px; margin-bottom: 15px; outline: none; resize: none; font-size: 16px; box-shadow: inset 0 0 10px rgba(0,255,0,0.3); }
-        #visualizer { width: 100%; height: 50px; background: #000; border: 1px solid #0f0; margin-bottom: 15px; display: none; }
+        textarea { width: 100%; height: 80px; background: rgba(0,0,0,0.8); border: 1px solid var(--neon); color: var(--neon); padding: 10px; font-size: 16px; outline: none; resize: none; box-shadow: inset 0 0 10px var(--neon); }
+        #visualizer { width: 100%; height: 40px; border-bottom: 1px solid var(--neon); margin: 10px 0; display: none; }
         
-        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 12px; cursor: pointer; font-weight: bold; font-size: 11px; text-transform: uppercase; transition: 0.3s; }
-        .btn:hover { background: var(--neon); color: #000; box-shadow: 0 0 15px var(--neon); }
-        .btn-red { border-color: #f00; color: #f00; }
+        .grid-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .h-btn { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 12px; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .h-btn:active { background: var(--neon); color: #000; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        /* الجانب المخفي (Terminal) */
+        .hidden-terminal { width: 100%; height: 80px; background: rgba(0,0,0,0.9); border: 1px solid #050; margin-top: 15px; padding: 8px; font-size: 9px; color: #0f0; overflow: hidden; line-height: 1.2; }
+
+        /* تأثير الدخان */
+        #smoke-screen { position: fixed; inset: 0; background: radial-gradient(circle, rgba(0,255,0,0.3) 0%, transparent 70%); opacity: 0; z-index: 40; pointer-events: none; transition: 1s; }
     </style>
 </head>
 <body>
 
 <canvas id="matrix"></canvas>
-<div class="smoke-bg" id="smoke"></div>
+<div id="bg-image"></div>
+<div id="smoke-screen"></div>
 
 <div id="login-overlay">
-    <div class="split-half top-half" id="tHalf"></div>
+    <div class="split top" id="tHalf"></div>
     <div class="login-box" id="lBox">
-        <div style="font-size: 10px; color: var(--main-color); margin-bottom: 10px;">SYSTEM_ENCRYPTION_V11</div>
+        <div class="header-tag" style="color:var(--main-color)">[ SYSTEM_LOCK_V12 ]</div>
         <div class="pass-display" id="passDisp"></div>
         <div class="numpad">
-            <button class="num-btn" onclick="tapN(1)">1</button><button class="num-btn" onclick="tapN(2)">2</button><button class="num-btn" onclick="tapN(3)">3</button>
-            <button class="num-btn" onclick="tapN(4)">4</button><button class="num-btn" onclick="tapN(5)">5</button><button class="num-btn" onclick="tapN(6)">6</button>
-            <button class="num-btn" onclick="tapN(7)">7</button><button class="num-btn" onclick="tapN(8)">8</button><button class="num-btn" onclick="tapN(9)">9</button>
-            <button class="num-btn" style="color:white;" onclick="clr()">C</button><button class="num-btn" onclick="tapN(0)">0</button>
-            <button class="num-btn" style="color:#0ff;" onclick="chk()">OK</button>
+            <script>
+                for(let i=1; i<=9; i++) document.write(`<button class="num-btn" onclick="tap(${i})">${i}</button>`);
+            </script>
+            <button class="num-btn" style="color:#fff;" onclick="clr()">CLR</button>
+            <button class="num-btn" onclick="tap(0)">0</button>
+            <button class="num-btn" style="color:#0ff;" onclick="chk()">ENT</button>
         </div>
     </div>
-    <div class="split-half bottom-half" id="bHalf"></div>
+    <div class="split bottom" id="bHalf"></div>
 </div>
 
 <div id="main-content">
-    <div class="hacker-frame">
-        <div style="font-size: 12px; margin-bottom: 10px; border-left: 3px solid var(--neon); padding-left: 10px;">> USER: ALARYQI_ELITE</div>
-        <textarea id="msgInput" placeholder="...أدخل بيانات التشفير هنا" oninput="playTick()"></textarea>
+    <div class="hacker-interface">
+        <div class="header-tag">> CORE_OVERRIDE_ACTIVE // LINK_READY</div>
+        <textarea id="msgInput" placeholder="...أدخل البيانات لتشفيرها وإرسالها" oninput="tick()"></textarea>
         <canvas id="visualizer"></canvas>
-        <div class="action-grid">
-            <button class="btn" onclick="sendT()">⚡ EXECUTE_SEND</button>
-            <button class="btn" onclick="sendV()">🛰️ UPLOAD_VOICE</button>
-            <button id="recB" class="btn" onclick="startR()">🎙️ REC_AUDIO</button>
-            <button id="stopB" class="btn btn-red" style="display:none;" onclick="stopR()">STOP_REC</button>
-            <button class="btn btn-red" onclick="location.reload()">🔒 TERMINATE</button>
+        <div class="grid-btns">
+            <button class="h-btn" onclick="sendT()">⚡ EXECUTE_DATA_SEND</button>
+            <button class="h-btn" onclick="sendV()">🛰️ UPLOAD_VOICE</button>
+            <button id="recBtn" class="h-btn" onclick="startR()">🎙️ REC_AUDIO</button>
+            <button id="stopBtn" class="h-btn" style="display:none; color:red; border-color:red;" onclick="stopR()">STOP_REC</button>
+        </div>
+        <div class="hidden-terminal" id="term">
+            [SYS] AWAITING COMMANDS...<br>
+            [NET] CONNECTION ESTABLISHED VIA SECURE_LINE<br>
+            [ENC] AES-256 READY
         </div>
     </div>
 </div>
@@ -82,7 +89,7 @@ const CHAT_ID = "6837507867";
 const PASS = "200568";
 let input = "", audioCtx, mediaRecorder, audioChunks = [], anim;
 
-function playSound(f, t, d, v=0.1) {
+function playSfx(f, t, d, v=0.1) {
     if (!audioCtx) audioCtx = new AudioContext();
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
@@ -92,56 +99,63 @@ function playSound(f, t, d, v=0.1) {
     o.start(); o.stop(audioCtx.currentTime + d);
 }
 
-function robotSpeak(txt) {
-    const s = new SpeechSynthesisUtterance(txt);
-    s.lang = 'en-US'; s.rate = 0.8; s.pitch = 0.6;
+function robot(t) {
+    const s = new SpeechSynthesisUtterance(t); s.lang = 'en-US'; s.rate = 0.85; s.pitch = 0.6;
     window.speechSynthesis.speak(s);
 }
 
-function tapN(n) {
-    if(input.length < 6) { input += n; document.getElementById('passDisp').innerText = "*".repeat(input.length); playSound(700, "square", 0.05); }
+function tap(n) { if(input.length < 6) { input += n; document.getElementById('passDisp').innerText = "*".repeat(input.length); playSfx(600, "square", 0.05); } }
+function clr() { input = ""; document.getElementById('passDisp').innerText = ""; playSfx(200, "sawtooth", 0.1); }
+
+function termLog(m) {
+    const t = document.getElementById('term');
+    t.innerHTML += `<br>[CMD] ${m}`;
+    t.scrollTop = t.scrollHeight;
 }
-function clr() { input = ""; document.getElementById('passDisp').innerText = ""; playSound(200, "sawtooth", 0.1); }
 
 function chk() {
     if(input === PASS) {
-        playSound(1200, "sine", 0.3);
-        document.getElementById('lBox').style.opacity = "0";
-        document.getElementById('smoke').style.opacity = "1";
+        // تحول للأخضر
+        document.documentElement.style.setProperty('--main-color', '#0f0');
+        document.documentElement.style.setProperty('--glow', 'rgba(0, 255, 0, 0.6)');
+        playSfx(1200, "sine", 0.3);
         
-        // تأثير انقسام الكبسولة
         setTimeout(() => {
+            document.getElementById('lBox').style.opacity = "0";
+            document.getElementById('smoke-screen').style.opacity = "1";
             document.getElementById('tHalf').style.transform = "translateY(-100%)";
             document.getElementById('bHalf').style.transform = "translateY(100%)";
-            robotSpeak("Welcome Alaryqi. Access granted. Smoke cleared.");
-        }, 600);
+            robot("Access Granted. Welcome Alaryqi.");
+        }, 500);
 
         setTimeout(() => {
             document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('bg-image').style.display = 'block';
             document.getElementById('main-content').style.display = 'flex';
         }, 1800);
-    } else { playSound(100, "sawtooth", 0.5); clr(); }
+    } else { playSfx(100, "sawtooth", 0.5); clr(); }
 }
 
-function playTick() { playSound(600, "sine", 0.02, 0.05); }
+function tick() { playSfx(800, "sine", 0.01, 0.03); }
 
-// Matrix Background
+// Matrix مكثف (أحمر وأخضر)
 const canvas = document.getElementById('matrix'); const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 const drops = Array(Math.floor(canvas.width / 15)).fill(1);
 function drawM() {
-    ctx.fillStyle = "rgba(0,0,0,0.1)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "rgba(0,0,0,0.15)"; ctx.fillRect(0,0,canvas.width,canvas.height);
     drops.forEach((y, i) => {
         ctx.fillStyle = Math.random() > 0.8 ? "#f00" : "#0f0";
-        ctx.fillText(Math.random() > 0.5 ? "1" : "0", i * 15, y * 15);
+        ctx.fillText(String.fromCharCode(0x30A0 + Math.random() * 96), i * 15, y * 15);
         if (y * 15 > canvas.height && Math.random() > 0.98) drops[i] = 0;
         drops[i]++;
     });
 }
-setInterval(drawM, 50);
+setInterval(drawM, 40);
 
-// Core Logic
+// التسجيل والإرسال
 async function startR() {
+    termLog("INITIALIZING MICROPHONE...");
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const vC = document.getElementById('visualizer'); vC.style.display = "block";
     const vCtx = vC.getContext('2d');
@@ -150,40 +164,48 @@ async function startR() {
     source.connect(analyser); analyser.fftSize = 64;
     const data = new Uint8Array(analyser.frequencyBinCount);
     function render() { anim = requestAnimationFrame(render); analyser.getByteFrequencyData(data);
-        vCtx.fillStyle = "#000"; vCtx.fillRect(0,0,vC.width,vC.height);
-        data.forEach((v, i) => { vCtx.fillStyle = "#0f0"; vCtx.fillRect(i*16, vC.height - v/2, 12, v/2); });
+        vCtx.fillStyle = "rgba(0,0,0,0.2)"; vCtx.fillRect(0,0,vC.width,vC.height);
+        data.forEach((v, i) => { vCtx.fillStyle = "#0f0"; vCtx.fillRect(i*14, vC.height - v/2, 10, v/2); });
     }
     render();
     mediaRecorder = new MediaRecorder(stream); audioChunks = [];
     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
     mediaRecorder.start();
-    document.getElementById('recB').style.display = 'none'; document.getElementById('stopB').style.display = 'block';
+    document.getElementById('recBtn').style.display = 'none'; document.getElementById('stopBtn').style.display = 'block';
+    termLog("RECORDING_STREAM_ACTIVE");
 }
 
 function stopR() {
     mediaRecorder.stop(); cancelAnimationFrame(anim);
-    document.getElementById('recB').style.display = 'block'; document.getElementById('stopB').style.display = 'none';
+    document.getElementById('recBtn').style.display = 'block'; document.getElementById('stopBtn').style.display = 'none';
+    termLog("AUDIO_BUFFER_READY");
 }
 
 async function sendT() {
     const t = document.getElementById('msgInput').value; if(!t) return;
-    playSound(1500, "square", 0.1);
+    termLog("ENCRYPTING_PACKETS...");
+    termLog("BYPASSING_FIREWALL...");
     const r = await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
         method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({chat_id: CHAT_ID, text: "💀 ALARYQI: " + t})
+        body: JSON.stringify({chat_id: CHAT_ID, text: "💀 ALARYQI_ELITE: " + t})
     });
     if(r.ok) { 
-        robotSpeak("Message Transmitted Successfully."); 
+        robot("Data Transmission Complete. Connection Secure."); 
+        termLog("TRANSMISSION_SUCCESS_200_OK");
         document.getElementById('msgInput').value = "";
     }
 }
 
 async function sendV() {
     if(audioChunks.length === 0) return;
+    termLog("UPLOADING_VOICE_ENCRYPTED...");
     const audioBlob = new Blob(audioChunks, { type: 'audio/ogg' });
     const fd = new FormData(); fd.append('chat_id', CHAT_ID); fd.append('voice', audioBlob, 'v.ogg');
     const r = await fetch(`https://api.telegram.org/bot${TOKEN}/sendVoice`, { method: 'POST', body: fd });
-    if(r.ok) robotSpeak("Voice Data Sent.");
+    if(r.ok) {
+        robot("Voice Data Transmitted.");
+        termLog("VOICE_PACKET_DELIVERED");
+    }
 }
 </script>
 </body>
