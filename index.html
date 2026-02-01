@@ -3,44 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALARYQI_SYSTEM_V14</title>
+    <title>ALARYQI_SYSTEM_V15</title>
     <style>
-        :root { --main-color: #f00; --neon: #0f0; --glow: rgba(255, 0, 0, 0.4); }
+        :root { --main-color: #f00; --neon: #0f0; --glow: rgba(255, 0, 0, 0.6); }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; color: var(--main-color); font-family: 'Courier New', monospace; overflow: hidden; }
         
-        canvas#matrix { position: fixed; inset: 0; z-index: -1; opacity: 0.4; }
+        canvas#matrix { position: fixed; inset: 0; z-index: -1; opacity: 0.5; }
 
-        /* خلفية الأكواد اللانهائية */
-        #code-bg { position: fixed; inset: 0; font-size: 10px; line-height: 1.2; padding: 10px; opacity: 0.3; pointer-events: none; overflow: hidden; z-index: 0; white-space: pre-wrap; }
+        /* خلفية الأكواد - جعلتها أوضح بناءً على طلبك */
+        #code-bg { position: fixed; inset: 0; font-size: 12px; line-height: 1.4; padding: 10px; opacity: 0.6; pointer-events: none; overflow: hidden; z-index: 0; white-space: pre-wrap; font-weight: bold; }
 
         /* خط نبض القلب */
-        .heartbeat { position: fixed; width: 100%; height: 2px; background: rgba(255, 0, 0, 0.2); z-index: 5; }
-        .h-top { top: 20%; } .h-bottom { bottom: 20%; }
-        .pulse { position: absolute; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, #f00, transparent); animation: pulseMove 2.5s linear infinite; }
+        .heartbeat { position: fixed; width: 100%; height: 2px; background: rgba(255, 0, 0, 0.3); z-index: 5; }
+        .h-top { top: 15%; } .h-bottom { bottom: 15%; }
+        .pulse { position: absolute; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, #f00, transparent); animation: pulseMove 2s linear infinite; }
         @keyframes pulseMove { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 
         /* شاشة القفل */
         #login-overlay { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; }
         .split { flex: 1; background: #000; transition: transform 1.5s ease-in-out; border: 1px solid var(--main-color); }
-        .login-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 110; width: 280px; padding: 20px; background: rgba(0,0,0,0.9); border: 2px solid var(--main-color); border-radius: 15px; text-align: center; box-shadow: 0 0 20px var(--main-color); transition: 0.5s; }
+        .login-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 110; width: 280px; padding: 20px; background: rgba(0,0,0,0.95); border: 2px solid var(--main-color); border-radius: 15px; text-align: center; box-shadow: 0 0 30px var(--main-color); }
         .pass-disp { background: #000; border: 1px solid var(--main-color); color: var(--main-color); height: 45px; margin-bottom: 15px; font-size: 28px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 10px var(--main-color); }
         .num-btn { background: transparent; border: 1px solid var(--main-color); color: var(--main-color); padding: 15px; width: 75px; margin: 4px; cursor: pointer; border-radius: 5px; font-weight: bold; }
 
         /* الواجهة الرئيسية */
         #main-content { display: none; flex-direction: column; align-items: center; padding: 15px; height: 100vh; justify-content: center; z-index: 10; position: relative; }
-        .radar-container { display: flex; justify-content: space-around; width: 100%; max-width: 500px; margin-bottom: 20px; }
-        .radar { width: 100px; height: 100px; border: 2px solid var(--neon); border-radius: 50%; position: relative; overflow: hidden; background: rgba(0, 40, 0, 0.2); }
-        .sweep { position: absolute; width: 50%; height: 50%; top: 0; left: 50%; background: linear-gradient(45deg, rgba(0,255,0,0.4), transparent); transform-origin: bottom left; animation: sweep 3s linear infinite; border-left: 1px solid var(--neon); }
+        
+        /* الرادارات - كبّرتها وجعلت أطرافها حمراء */
+        .radar-container { display: flex; justify-content: space-around; width: 100%; max-width: 600px; margin-bottom: 30px; }
+        .radar { width: 150px; height: 150px; border: 3px solid var(--main-color); border-radius: 50%; position: relative; overflow: hidden; background: rgba(0, 20, 0, 0.4); box-shadow: 0 0 20px var(--main-color); }
+        .sweep { position: absolute; width: 50%; height: 50%; top: 0; left: 50%; background: linear-gradient(45deg, rgba(255,0,0,0.4), transparent); transform-origin: bottom left; animation: sweep 3s linear infinite; border-left: 2px solid var(--main-color); }
         @keyframes sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        .hacker-frame { width: 90%; max-width: 400px; background: rgba(0, 10, 0, 0.9); border: 1px solid var(--neon); padding: 15px; border-radius: 10px; box-shadow: 0 0 30px rgba(0,255,0,0.2); }
-        textarea { width: 100%; height: 70px; background: #000; border: 1px solid var(--neon); color: var(--neon); padding: 8px; box-sizing: border-box; outline: none; resize: none; }
+        /* نقاط أهداف وهمية */
+        .target { position: absolute; width: 6px; height: 6px; background: #f00; border-radius: 50%; box-shadow: 0 0 10px #f00; animation: blink 1s infinite; }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+        .hacker-frame { width: 90%; max-width: 420px; background: rgba(0, 10, 0, 0.9); border: 1px solid var(--neon); padding: 15px; border-radius: 10px; box-shadow: 0 0 40px rgba(0,255,0,0.2); }
+        textarea { width: 100%; height: 80px; background: #000; border: 1px solid var(--neon); color: var(--neon); padding: 8px; box-sizing: border-box; outline: none; resize: none; font-size: 16px; }
         
-        /* محلل الصوت */
-        #visualizer { width: 100%; height: 40px; margin: 10px 0; display: none; border-bottom: 1px solid var(--neon); }
+        #visualizer { width: 100%; height: 50px; margin: 10px 0; display: none; border-bottom: 1px solid var(--neon); }
 
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .h-btn { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 10px; font-size: 10px; cursor: pointer; font-weight: bold; }
+        .h-btn { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 12px; font-size: 11px; cursor: pointer; font-weight: bold; }
         .h-btn:active { background: var(--neon); color: #000; }
     </style>
 </head>
@@ -68,11 +74,19 @@
 
 <div id="main-content">
     <div class="radar-container">
-        <div class="radar"><div class="sweep"></div></div>
-        <div class="radar"><div class="sweep"></div></div>
+        <div class="radar">
+            <div class="sweep"></div>
+            <div class="target" style="top:30%; left:60%;"></div>
+            <div class="target" style="top:70%; left:20%;"></div>
+        </div>
+        <div class="radar">
+            <div class="sweep"></div>
+            <div class="target" style="top:40%; left:40%;"></div>
+            <div class="target" style="top:20%; left:80%;"></div>
+        </div>
     </div>
     <div class="hacker-frame">
-        <textarea id="msgInput" placeholder="...أدخل البيانات لتشفيرها" oninput="tick()"></textarea>
+        <textarea id="msgInput" placeholder="...SYSTEM_READY: أدخل البيانات" oninput="tick()"></textarea>
         <canvas id="visualizer"></canvas>
         <div class="btn-grid">
             <button class="h-btn" onclick="sendT()">⚡ EXECUTE_SEND</button>
@@ -86,24 +100,23 @@
 <script>
 const TOKEN = "8579983010:AAFKblFfzbNYk0bXOY6afuSZg3cIu35nobI";
 const CHAT_ID = "6837507867";
-const PASS = "200568";
+const PASS = "2005223"; // تم تحديث كلمة السر كما طلبت
 let input = "", audioCtx, mediaRecorder, audioChunks = [], vAnim;
 
-// نظام الأكواد في الخلفية
 const codeBg = document.getElementById('code-bg');
 function addCodeLine() {
     const lines = [
-        "EXEC: ACCESS_PORT_8080...", "LINK: SECURE_SOCKET_ESTABLISHED", "BYPASS: FIREWALL_LAYER_7",
-        "INJECT: SQL_DUMP_COMMAND", "TRACE: IP_REMOTE_ENCRYPTED", "SYSCALL: KERNEL_VOID_MAIN",
-        "DECRYPT: AES_256_KEY_FOUND", "PING: PACKET_SENT_77ms"
+        "CRITICAL: INTRUSION_DETECTED", "STATUS: ENCRYPTING_IP_ADDRESS", "MODULE: RADAR_V15_ACTIVE",
+        "KEY: 2005223_ACCEPTED", "TRACE: TARGET_LOCKED_ON_GRID", "FIREWALL: BREACH_REPELLED",
+        "SYNC: RADAR_STATIONS_ONLINE", "NET: BYPASSING_PROXY_GATE"
     ];
     const line = document.createElement('div');
     line.innerText = lines[Math.floor(Math.random() * lines.length)];
     codeBg.appendChild(line);
-    if(codeBg.childNodes.length > 50) codeBg.removeChild(codeBg.firstChild);
+    if(codeBg.childNodes.length > 40) codeBg.removeChild(codeBg.firstChild);
     codeBg.scrollTop = codeBg.scrollHeight;
 }
-setInterval(addCodeLine, 150);
+setInterval(addCodeLine, 120);
 
 function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
 function playSfx(f, t, d, v=0.1) {
@@ -121,14 +134,13 @@ function tick() { playSfx(800, "sine", 0.01, 0.02); }
 
 function chk() {
     if(input === PASS) {
-        // تحول اللون للأخضر
         document.documentElement.style.setProperty('--main-color', '#0f0');
         codeBg.style.color = "#0f0";
         playSfx(1200, "sine", 0.3);
         document.getElementById('lBox').style.opacity = "0";
         document.getElementById('tHalf').style.transform = "translateY(-100%)";
         document.getElementById('bHalf').style.transform = "translateY(100%)";
-        robot("Access Granted.");
+        robot("Welcome Alaryqi. Access Confirmed.");
         setTimeout(() => {
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('main-content').style.display = 'flex';
@@ -141,8 +153,6 @@ async function startR() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     mediaRecorder = new MediaRecorder(stream);
     audioChunks = [];
-    
-    // إيقاعات الصوت
     const vis = document.getElementById('visualizer'); vis.style.display = "block";
     const vCtx = vis.getContext('2d');
     const analyser = audioCtx.createAnalyser();
@@ -150,16 +160,14 @@ async function startR() {
     source.connect(analyser);
     analyser.fftSize = 64;
     const data = new Uint8Array(analyser.frequencyBinCount);
-    
     function drawV() {
         vAnim = requestAnimationFrame(drawV);
         analyser.getByteFrequencyData(data);
         vCtx.clearRect(0, 0, vis.width, vis.height);
         vCtx.fillStyle = "#0f0";
-        data.forEach((v, i) => { vCtx.fillRect(i * 10, vis.height - v/4, 8, v/4); });
+        data.forEach((v, i) => { vCtx.fillRect(i * 12, vis.height - v/3, 10, v/3); });
     }
     drawV();
-
     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
     mediaRecorder.start();
     document.getElementById('recB').style.display = 'none';
@@ -181,7 +189,7 @@ async function sendT() {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({chat_id: CHAT_ID, text: "💀 DATA: " + txt})
     });
-    robot("Data Sent."); document.getElementById('msgInput').value = "";
+    robot("Data Transmitted."); document.getElementById('msgInput').value = "";
 }
 
 async function sendV() {
@@ -189,10 +197,9 @@ async function sendV() {
     const blob = new Blob(audioChunks, { type: 'audio/ogg' });
     const fd = new FormData(); fd.append('chat_id', CHAT_ID); fd.append('voice', blob, 'v.ogg');
     await fetch(`https://api.telegram.org/bot${TOKEN}/sendVoice`, { method: 'POST', body: fd });
-    robot("Voice Sent.");
+    robot("Voice Transmitted.");
 }
 
-// الأكواد المتساقطة الماتريكس
 const canvas = document.getElementById('matrix'); const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 const drops = Array(Math.floor(canvas.width / 15)).fill(1);
